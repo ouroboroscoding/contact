@@ -1,0 +1,34 @@
+{
+	"__name__": "Project",
+
+	"_id": {
+		"__type__": "uuid"
+	},
+
+	"_created": {
+		"__type__": "timestamp",
+		"__optional__": true
+	},
+
+	"_updated": {
+		"__type__": "timestamp",
+		"__optional__": true
+	},
+
+	"name": {
+		"__type__": "string",
+		"__maximum__": 63
+	},
+
+	"short_code": {
+		"__type__": "string",
+		"__minimum__": 3,
+		"__maximum__": 4,
+		"__regex__": "^[A-Z]{3,4}$"
+	},
+
+	"description": {
+		"__type__": "string",
+		"__maximum__": 255
+	}
+}

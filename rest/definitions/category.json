@@ -1,0 +1,26 @@
+{
+	"__name__": "Category",
+
+	"_id": {
+		"__type__": "uuid"
+	},
+
+	"_created": {
+		"__type__": "timestamp",
+		"__optional__": true
+	},
+
+	"_updated": {
+		"__type__": "timestamp",
+		"__optional__": true
+	},
+
+	"_project": {
+		"__type__": "uuid"
+	},
+
+	"name": {
+		"__type__": "string",
+		"__maximum__": 31
+	}
+}

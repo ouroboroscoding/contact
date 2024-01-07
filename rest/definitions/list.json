@@ -1,0 +1,41 @@
+{
+	"__name__": "List",
+
+	"_id": {
+		"__type__": "uuid"
+	},
+
+	"_created": {
+		"__type__": "timestamp",
+		"__optional__": true
+	},
+
+	"_update": {
+		"__type__": "timestamp",
+		"__optional__": true
+	},
+
+	"_project": {
+		"__type__": "uuid"
+	},
+
+	"email_address": {
+		"__type__": "string",
+		"__maximum__": 255
+	},
+
+	"name": {
+		"__type__": "string",
+		"__maximum__": 63
+	},
+
+	"company": {
+		"__type__": "string",
+		"__maximum__": 63
+	},
+
+	"categories": {
+		"__array__": "unique",
+		"__type__": "uuid"
+	}
+}

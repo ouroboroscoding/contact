@@ -1,0 +1,52 @@
+{
+	"body": {
+		"rest": {
+			"allowed": "(?:contact.local)",
+			"default": {
+				"domain": "localhost",
+				"host": "0.0.0.0",
+				"port": 9000,
+				"protocol": "http",
+				"workers": 1
+			},
+			"services": {
+				"admin": {"port": 10}
+			},
+			"verbose": true
+		}
+	},
+
+	"memory": {
+		"redis": "session"
+	},
+
+	"records": {
+		"cache": {
+			"redis": "records",
+			"ttl": 0
+		}
+	},
+
+	"mysql": {
+		"primary": {
+			"charset": "utf8",
+			"host": "localhost",
+			"passwd": "",
+			"port": 3306,
+			"user": "mysql"
+		},
+		"db": "contact",
+		"tz": "+00:00"
+	},
+
+	"redis": {
+		"session": {
+			"host": "localhost",
+			"port": 6379
+		},
+		"records": {
+			"host": "localhost",
+			"port": 6379
+		}
+	}
+}
