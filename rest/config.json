@@ -1,4 +1,8 @@
 {
+	"admin": {
+		"verbose": false
+	},
+
 	"body": {
 		"rest": {
 			"allowed": "(?:contact.local)",

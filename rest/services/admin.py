@@ -14,6 +14,7 @@ from body import Error, errors, Response, Service
 from jobject import jobject
 from record.exceptions import RecordDuplicate
 from tools import evaluate, without
+import undefined
 
 # Import records
 from records.admin import project
@@ -69,6 +70,10 @@ class Admin(Service):
 		if not isinstance(req.data.record, dict):
 			return Error(errors.DATA_FIELDS, [ [ 'record', 'invalid' ] ])
 
+		# Make sure the short code is all uppercase
+		if 'short_code' in req.data.record:
+			req.data.record.short_code = req.data.record.short_code.upper()
+
 		# Create and validate the record
 		try:
 			sID = project.Project.add(
@@ -100,7 +105,7 @@ class Admin(Service):
 			return Error(errors.DATA_FIELDS, [ [ '_id', 'missing' ] ])
 
 		# Find the project
-		oProject = project.Project.fetch(req.data._id)
+		oProject = project.Project.get(req.data._id)
 		if not oProject:
 			return Error(errors.DB_NO_RECORD, [ req.data._id, 'project' ])
 
@@ -108,7 +113,7 @@ class Admin(Service):
 		mRes = oProject.remove(revision_info = { 'user': REPLACE_ME })
 
 		# Return the result
-		return Response(mRes)
+		return Response(mRes and True or False)
 
 	def project_read(self, req: jobject) -> Response:
 		"""Project (read)
@@ -122,14 +127,24 @@ class Admin(Service):
 			Services.Response
 		"""
 
-		# If the ID is missing
-		if '_id' not in req.data:
+		# If we got an ID
+		if '_id' in req.data:
+			mIndex = undefined
+			_id = req.data._id
+
+		# Else, if we got a short code
+		elif 'short_code' in req.data:
+			mIndex = 'ui_short_code'
+			_id = req.data.short_code
+
+		# Else, missing an ID
+		else:
 			return Error(errors.DATA_FIELDS, [ [ '_id', 'missing' ] ])
 
 		# Find the project
-		dProject = project.Project.fetch(req.data._id, raw = True)
+		dProject = project.Project.get(_id, index = mIndex, raw = True)
 		if not dProject:
-			return Error(errors.DB_NO_RECORD, [ req.data._id, 'project' ])
+			return Error(errors.DB_NO_RECORD, [ _id, 'project' ])
 
 		# Return the record
 		return Response(dProject)
@@ -157,12 +172,16 @@ class Admin(Service):
 			return Error(errors.DATA_FIELDS, [ [ 'record', 'invalid' ] ])
 
 		# Find the project
-		oProject = project.Project.fetch(req.data._id)
+		oProject = project.Project.get(req.data._id)
 		if not oProject:
 			return Error(errors.DB_NO_RECORD, [ req.data._id, 'project' ])
 
 		# Remove any fields found that can't be altered by the user
 		without(req.data.record, ['_id', '_created', '_updated'], True)
+
+		# Make sure the short code is all uppercase
+		if 'short_code' in req.data.record:
+			req.data.record.short_code = req.data.record.short_code.upper()
 
 		# Update it using the record data sent
 		try:
@@ -175,7 +194,7 @@ class Admin(Service):
 			return Error(errors.DATA_FIELDS, oProject.errors)
 
 		# Save the user and store the result
-		bRes = oProject.save(revision_info = { 'user' : req.session.user })
+		bRes = oProject.save(revision_info = { 'user' : REPLACE_ME })
 
 		# Return the changes or False
 		return Response(bRes and dChanges or False)

@@ -24,7 +24,8 @@ Project = Storage(
 
 	# The primary definition
 	jsonb.load(
-		'%s/definitions/project.json' % Path(__file__).parent.parent.parent.resolve()
+		'%s/definitions/admin/project.json' % \
+			Path(__file__).parent.parent.parent.resolve()
 	),
 
 	# The extensions necessary to store the data and revisions in MySQL
