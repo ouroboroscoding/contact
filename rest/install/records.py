@@ -16,7 +16,7 @@ import record_mysql
 import record_redis
 
 # Records
-from records.admin import project
+from records.admin import category, contact, project, unsubscribe
 
 # Only run if called directly
 if __name__ == '__main__':
@@ -35,5 +35,8 @@ if __name__ == '__main__':
 		config.mysql.db('contact')
 	)
 
-	# Create the User table
+	# Create the tables
+	category.Category.install()
+	contact.Contact.install()
 	project.Project.install()
+	unsubscribe.Unsubscribe.install()

@@ -1,0 +1,46 @@
+<html>
+	<head>
+		<title>Unsubscribed</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			body { padding: 0; margin: 0 }
+			.container { background-color: #e2e2e2;
+							padding: 10px 15px; margin: 10px auto; }
+			@media only screen and (min-width: 576px) {
+				.container { max-width: 540px; }
+			}
+			@media only screen and (min-width: 768px) {
+				.container { max-width: 720px; }
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+		{% if error is defined -%}
+			{% if error == 'no_contact' -%}
+				You have already been unsubscribed.
+			{%- elif error == 'no_project' -%}
+				Good news, this project no longer exists so they won't be
+				emailing you or anyone else.
+			{%- elif error == 'unsubscribe' -%}
+				There was an issue adding "{{ email_address }}" to the
+				unsubscribe list. We are incredibly sorry about this, please
+				reload the page to try again. If it still doesn't work contact
+				support at clients@ouroboroscoding.com and we will immediately
+				resolve the problem and remove you.
+			{%- endif %}
+		{%- elif email_address is defined -%}
+			<p>
+				<b>{{ email_address }}</b> has been successfully removed
+			{% if project_name is defined -%}
+				from <b>{{ project_name }}</b>.
+			{%- else -%}
+				from the system.
+			{%- endif %}
+		{%- else -%}
+			Something has gone wrong.
+		{%- endif %}
+		</div>
+	</body>
+</html>

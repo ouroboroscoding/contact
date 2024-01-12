@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Unsubscribe</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			body { padding: 0; margin: 0 }
+			.container { background-color: #e2e2e2;
+							padding: 10px 15px; margin: 10px auto; }
+			@media only screen and (min-width: 576px) {
+				.container { margin: 10px auto; max-width: 540px; }
+			}
+			@media only screen and (min-width: 768px) {
+				.container { margin: 10px auto; max-width: 720px; }
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+		{% if error is defined -%}
+			{% if error == 'no_project' %}
+			Good news, this project no longer exists so they won't be
+			emailing you or anyone else.
+			{%- endif %}
+		{%- else -%}
+			<p>
+				Please confirm you wish to unsubscribe
+				<b>{{ info.email_address }}</b> from
+				<b>{{ info.project_name }}</b>
+			</p>
+			<form method="post">
+				<button type="submit">Confirm</button>
+			</form>
+			<br />
+		{%- endif -%}
+		</div>
+	</body>
+</html>

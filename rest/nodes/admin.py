@@ -45,6 +45,9 @@ def main():
 	# Register the services
 	oRest = register_services({ 'admin': oAdmin })
 
+	# Get the admin conf
+	dAdmin = oRest['admin']
+
 	# Run the REST server with the Client instance
 	REST(
 		'admin',
@@ -53,11 +56,11 @@ def main():
 		errors,
 		dConf['verbose']
 	).run(
-		host = oRest['admin']['host'],
-		port = oRest['admin']['port'],
-		workers = oRest['admin']['workers'],
-		timeout = 'timeout' in oRest['admin'] and \
-			oRest['admin']['timeout'] or 30
+		host = dAdmin['host'],
+		port = dAdmin['port'],
+		workers = dAdmin['workers'],
+		timeout = 'timeout' in dAdmin and \
+			dAdmin['timeout'] or 30
 	)
 
 # Only run if called directly

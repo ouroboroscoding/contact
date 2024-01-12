@@ -1,5 +1,5 @@
 {
-	"__name__": "List",
+	"__name__": "Contact",
 
 	"_id": {
 		"__type__": "uuid"
@@ -10,7 +10,7 @@
 		"__optional__": true
 	},
 
-	"_update": {
+	"_updated": {
 		"__type__": "timestamp",
 		"__optional__": true
 	},
@@ -27,6 +27,12 @@
 	"name": {
 		"__type__": "string",
 		"__maximum__": 63
+	},
+
+	"alias": {
+		"__type__": "string",
+		"__maximum__": 31,
+		"__optional__": true
 	},
 
 	"company": {
