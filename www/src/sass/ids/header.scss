@@ -1,0 +1,20 @@
+#header {
+	border-bottom: 1px solid #dbdbdb;
+	padding: 5px 5px 5px 15px;
+
+	.title {
+
+		font-size: 1.2rem;
+		font-weight: bold;
+		margin-top: 3px;
+
+		a {
+			color: $cBlack;
+			text-decoration: none;
+		}
+	}
+
+	i {
+		font-size: 1.1rem;
+	}
+}

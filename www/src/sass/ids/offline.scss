@@ -1,0 +1,11 @@
+#offline {
+	background-color: $cRed;
+	color: $cWhite;
+	padding: 10px;
+	text-align: center;
+	z-index: $z-errors;
+
+	p {
+		font-weight: bold;
+	}
+}

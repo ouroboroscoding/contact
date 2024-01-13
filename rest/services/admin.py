@@ -16,6 +16,9 @@ from record.exceptions import RecordDuplicate
 from tools import evaluate, without
 import undefined
 
+# Python imports
+from operator import itemgetter
+
 # Import records
 from records.admin import category, contact, project, unsubscribe
 
@@ -541,3 +544,24 @@ class Admin(Service):
 
 		# Return the changes or False
 		return Response(bRes and dChanges or False)
+
+	def projects_read(self, req: jobject) -> Response:
+		"""Projects (read)
+
+		Fetches and returns all existing projects in the system
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# Get all the records
+		lProjects = project.Project.get(raw = True)
+
+		# Sort them by name
+		lProjects.sort(key = itemgetter('name'))
+
+		# Find and return the projects
+		return Response(lProjects)

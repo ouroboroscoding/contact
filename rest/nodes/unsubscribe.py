@@ -78,8 +78,6 @@ class Unsubscribe(bottle.Bottle):
 			Response
 		"""
 
-		print('index GET called')
-
 		# Set the return to HTML
 		bottle.response.headers['Content-Type'] = \
 				'text/html; charset=utf-8'
@@ -196,8 +194,6 @@ class Unsubscribe(bottle.Bottle):
 		# Set the return to HTML
 		bottle.response.headers['Content-Type'] = \
 				'text/html; charset=utf-8'
-
-		print('one_click GET called')
 
 		# Find the contact
 		oContact = contact.Contact.get(id)

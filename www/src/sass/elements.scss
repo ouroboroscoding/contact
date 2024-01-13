@@ -1,0 +1,46 @@
+html, body {
+	font-family: "Roboto","Helvetica","Arial",sans-serif;
+	height: 100%;
+}
+
+a, a:active, a:hover, a:link, a:visited {
+	color: inherit;
+	text-decoration: none;
+}
+
+h1 {
+	font-size: 2.2rem;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+h2 {
+	font-size: 1.9rem;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+h3 {
+	font-size: 1.5rem;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+h4 {
+	font-size: 1.2rem;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+h1.no_margin, h2.no_margin, h3.no_margin, h4.no_margin {
+	margin: 0;
+}
+
+p:not(:last-child) {
+	margin-bottom: 10px;
+}
+
+sup {
+	font-size: smaller;
+	vertical-align: super;
+}

@@ -52,7 +52,7 @@ def main():
 	REST(
 		'admin',
 		oAdmin,
-		config.body.rest.allowed('contact.local'),
+		config.body.rest.allowed(),
 		errors,
 		dConf['verbose']
 	).run(

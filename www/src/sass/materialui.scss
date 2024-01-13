@@ -1,0 +1,60 @@
+.MuiDialogTitle-root + .MuiDialogContent-root {
+	padding-top: 5px;
+	padding-bottom: 0;
+}
+
+.MuiList-root {
+	background-color: $cWhite;
+	color: $cGrey;
+	font-weight: bold;
+	padding: 0;
+
+	.MuiTypography-root {
+		font-weight: bold;
+	}
+}
+
+.MuiListItemButton-root.Mui-selected,
+.MuiListItemButton-root.Mui-selected:hover {
+	background-color: #5fa6c9;
+	color: $cWhite;
+}
+
+.MuiPaper-root {
+	background-color: #fafafa;
+	margin-bottom: 10px;
+
+	.MuiPaper-root {
+		background-color: #ffffff;
+
+		.MuiPaper-root {
+			background-color: #fafafa;
+
+			.MuiPaper-root {
+				background-color: #ffffff;
+			}
+		}
+	}
+}
+
+div.MuiOutlinedInput-root {
+	background-color: $cWhite;
+}
+
+.MuiSnackbarContent-action, .MuiSnackbarContent-message {
+	color: $cBlack;
+}
+
+td.MuiTableCell-body {
+	vertical-align: top;
+}
+
+.MuiGrid-item {
+	.MuiPaper-root {
+		height: 100%;
+	}
+}
+
+td.actions {
+	padding: 8px;
+}
