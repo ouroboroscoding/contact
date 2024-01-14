@@ -56,6 +56,27 @@ class Admin(Service):
 		"""
 		return self
 
+	def categories_read(self, req: jobject) -> Response:
+		"""Categories (read)
+
+		Fetches and returns all existing categories in the system
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# Get all the records
+		lCategories = category.Category.get(raw = True)
+
+		# Sort them by name
+		lCategories.sort(key = itemgetter('name'))
+
+		# Find and return the categories
+		return Response(lCategories)
+
 	def category_create(self, req: jobject) -> Response:
 		"""Category (create)
 
@@ -394,6 +415,38 @@ class Admin(Service):
 
 		# Return the changes or False
 		return Response(bRes and dChanges or False)
+
+	def contacts_read(self, req: jobject) -> Response:
+		"""Contacts (read)
+
+		Fetches contacts by project and optionally by category
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# If the project is not passed
+		if '_project' not in req.data:
+			return Error(errors.DATA_FIELDS, [ [ '_project', 'missing' ] ])
+
+		# Init the search filter
+		dFilter = { '_project': req.data._project }
+
+		# If we have categories
+		if 'categories' in req.data:
+			dFilter['categories'] = req.data.categories
+
+		# Request the contacts
+		lContacts = contact.Contact.filter(dFilter, raw = True)
+
+		# Sort them by name
+		lContacts.sort(key = itemgetter('name'))
+
+		# Return the records
+		return Response(lContacts)
 
 	def project_create(self, req: jobject) -> Response:
 		"""Project (create)

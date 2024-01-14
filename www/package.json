@@ -11,7 +11,7 @@
     "@ouroboros/clone": "^1.0.1",
     "@ouroboros/dates": "^1.0.0",
     "@ouroboros/define": "^1.0.3",
-    "@ouroboros/define-mui": "^1.4.4",
+    "@ouroboros/define-mui": "file:../../@ouroboros/define-mui",
     "@ouroboros/events": "^1.0.0",
     "@ouroboros/tools": "^0.5.3",
     "@testing-library/jest-dom": "^5.16.2",

@@ -128,6 +128,18 @@ export default function Header(props) {
 								<ListItemText primary="Projects" />
 							</ListItemButton>
 						</Link>
+						<Link to="/categories" onClick={menuOff}>
+							<ListItemButton selected={location.pathname === '/categories'}>
+								<ListItemIcon><i className="fa-solid fa-list" /></ListItemIcon>
+								<ListItemText primary="Categories" />
+							</ListItemButton>
+						</Link>
+						<Link to="/contacts" onClick={menuOff}>
+							<ListItemButton selected={location.pathname === '/contacts'}>
+								<ListItemIcon><i className="fa-solid fa-users" /></ListItemIcon>
+								<ListItemText primary="Contacts" />
+							</ListItemButton>
+						</Link>
 					</List>
 					<Box className="flexStatic footer">
 						Version {process.env.REACT_APP_VERSION}

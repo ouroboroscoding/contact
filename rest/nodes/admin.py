@@ -50,11 +50,12 @@ def main():
 
 	# Run the REST server with the Client instance
 	REST(
-		'admin',
-		oAdmin,
-		config.body.rest.allowed(),
-		errors,
-		dConf['verbose']
+		name = 'admin',
+		instance = oAdmin,
+		cors = config.body.rest.allowed(),
+		lists = True,
+		on_errors = errors,
+		verbose = dConf['verbose']
 	).run(
 		host = dAdmin['host'],
 		port = dAdmin['port'],

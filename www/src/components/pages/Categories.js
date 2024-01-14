@@ -1,16 +1,16 @@
 /**
- * Projects
+ * Categories
  *
- * List of projects in the system
+ * List of categories in the system
  *
  * @author Chris Nasr <chris@ouroboroscoding.com>
- * @created 2024-01-13
+ * @created 2024-01-14
  */
 
 // Ouroboros modules
 import body, { errors } from '@ouroboros/body';
 import { Tree } from '@ouroboros/define';
-import { Form, Results } from '@ouroboros/define-mui';
+import { Form, Options, Results } from '@ouroboros/define-mui';
 
 // NPM modules
 import PropTypes from 'prop-types';
@@ -28,49 +28,50 @@ import { addError } from 'components/Errors';
 import { showSuccess } from 'components/Success';
 
 // Definitions
-import ProjectDef from 'definitions/admin/project';
+import CategoryDef from 'definitions/admin/category';
+
+// Generate the project options
+const ProjectOptions = new Options.Fetch(() => {
+	return new Promise((resolve, reject) => {
+		body.read('admin', 'projects').then(resolve, error => {
+			addError(error);
+		});
+	});
+});
 
 // Generate the Tree
-const ProjectTree = new Tree(ProjectDef, {
+const CategoryTree = new Tree(CategoryDef, {
 	__ui__: {
-		__create__: [ 'name', 'short_code', 'description' ],
-		__update__: [ 'name', 'description' ],
-		__results__: [
-			'_created', '_updated', 'name', 'short_code', 'description'
-		]
+		__create__: [ '_project', 'name' ],
+		__update__: [ 'name' ],
+		__results__: [ '_created', '_updated', '_project', 'name' ]
 	},
 
 	_update: { __ui__: { __title__: 'Last Updated' } },
-	name: { __ui__: { __title__: 'Project Name' } },
-	short_code: { __ui__: { __title__: 'Short Code ( 3 or 4 letters )' } }
+	_project: { __ui__: {
+		__options__: ProjectOptions,
+		__title__: 'Project',
+		__type__: 'select'
+	}},
+	name: { __ui__: { __title__: 'Category Name' } }
 });
 
 // Constants
 const GRID_SIZES = {
-	__default__: { xs: 12 },
-	name: { xs: 12, md: 9 },
-	short_code: { xs: 12, md: 3 }
+	__default__: { xs: 12, md: 6 }
 };
 
-// Filter short codes
-function shortCodeFilter(ev) {
-	const s = ev.data.short_code.toUpperCase().split('').filter(
-		c => (c >= 'A' && c <= 'Z')
-	).join('')
-	return { short_code: s }
-}
-
 /**
- * Projects
+ * Categories
  *
- * Displays current projects with the ability to edit them, or add a new one
+ * Displays current categories with the ability to edit them, or add a new one
  *
- * @name Projects
+ * @name Categories
  * @access public
  * @param Object props Properties passed to the component
  * @returns React.Component
  */
-export default function Projects(props) {
+export default function Categories(props) {
 
 	// State
 	const [ create, createSet ] = useState(false);
@@ -79,8 +80,8 @@ export default function Projects(props) {
 	// Load effect
 	useEffect(() => {
 
-		// Fetch the projects from the server
-		body.read('admin', 'projects').then(resultsSet);
+		// Fetch the categories from the server
+		body.read('admin', 'categories').then(resultsSet);
 
 	}, []);
 
@@ -91,16 +92,16 @@ export default function Projects(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the create request
-			body.create('admin', 'project', { record }).then(data => {
+			body.create('admin', 'category', { record }).then(data => {
 
 				// Close the create form
 				createSet(false);
 
 				// Notify the user
-				showSuccess('Project created. Refreshing project list.');
+				showSuccess('Category created. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'projects').then(resultsSet);
+				body.read('admin', 'categories').then(resultsSet);
 
 				// Resolve ok
 				resolve(true);
@@ -116,18 +117,18 @@ export default function Projects(props) {
 		});
 	}
 
-	// Called to delete a project
+	// Called to delete a category
 	function resultRemove(key) {
 
 		// Send the delete request
-		body.delete('admin', 'project', { _id: key }).then(data => {
+		body.delete('admin', 'category', { _id: key }).then(data => {
 			if(data) {
 
 				// Notify the user
-				showSuccess('Project deleted. Refreshing project list.');
+				showSuccess('Category deleted. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'projects').then(resultsSet);
+				body.read('admin', 'categories').then(resultsSet);
 			}
 		}, error => {
 			addError(error);
@@ -141,16 +142,16 @@ export default function Projects(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the update request
-			body.update('admin', 'project', {
+			body.update('admin', 'category', {
 				_id: key,
 				record
 			}).then(data => {
 
 				// Notify the user
-				showSuccess('Project updated. Refreshing project list.');
+				showSuccess('Category updated. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'projects').then(resultsSet);
+				body.read('admin', 'categories').then(resultsSet);
 
 				// Resolve ok
 				resolve(true);
@@ -168,10 +169,10 @@ export default function Projects(props) {
 
 	// Render
 	return (
-		<Box id="projects" className="flexDynamic padding">
+		<Box id="categories" className="flexDynamic padding">
 			<Box className="pageHeader flexColumns">
-				<h1 className="flexDynamic">Projects</h1>
-				<Tooltip className="flexStatic" title="Create new Project">
+				<h1 className="flexDynamic">Categories</h1>
+				<Tooltip className="flexStatic" title="Create new Category">
 					<IconButton onClick={() => createSet(b => !b)} className={create ? 'open' : null}>
 						<i className="fa-solid fa-circle-plus" />
 					</IconButton>
@@ -182,9 +183,8 @@ export default function Projects(props) {
 					<Form
 						gridSizes={GRID_SIZES}
 						onCancel={() => createSet(false)}
-						onNodeChange={{ short_code: shortCodeFilter }}
 						onSubmit={createSubmit}
-						tree={ProjectTree}
+						tree={CategoryTree}
 						type="create"
 					/>
 				</Paper>
@@ -192,16 +192,15 @@ export default function Projects(props) {
 			{(results === false &&
 				<Typography>Loading...</Typography>
 			) || (results.length === 0 &&
-				<Typography>No Projects found.</Typography>
+				<Typography>No Categories found.</Typography>
 			) ||
 				<Results
 					data={results}
 					gridSizes={GRID_SIZES}
 					onDelete={resultRemove}
 					onUpdate={updateSubmit}
-					onNodeChange={{ short_code: shortCodeFilter }}
 					orderBy="name"
-					tree={ProjectTree}
+					tree={CategoryTree}
 				/>
 			}
 		</Box>
@@ -209,6 +208,6 @@ export default function Projects(props) {
 }
 
 // Valid props
-Projects.propTypes = {
+Categories.propTypes = {
 	mobile: PropTypes.bool.isRequired
 }

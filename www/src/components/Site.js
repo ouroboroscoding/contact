@@ -37,6 +37,8 @@ import Success from 'components/Success';
 import Testing from 'components/Testing';
 
 // Site pages
+import Categories from 'components/pages/Categories';
+import Contacts from 'components/pages/Contacts';
 import Projects from 'components/pages/Projects';
 
 // Add default onCopyKey methods to Results
@@ -85,6 +87,12 @@ export default function Site(props) {
 					<Header mobile={mobile} />
 					<Box className="flexDynamic">
 						<Routes>
+							<Route path="/categories" element={
+								<Categories mobile={mobile} />
+							} />
+							<Route path="/contacts" element={
+								<Contacts mobile={mobile} />
+							} />
 							<Route path="/projects" element={
 								<Projects mobile={mobile} />
 							} />

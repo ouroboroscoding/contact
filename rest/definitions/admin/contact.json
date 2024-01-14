@@ -42,6 +42,8 @@
 
 	"categories": {
 		"__array__": "unique",
-		"__type__": "uuid"
+		"__type__": {
+			"__type__": "uuid"
+		}
 	}
 }
