@@ -1,14 +1,14 @@
 # coding=utf8
-""" Admin Contact Record
+""" Admin Campaign Record
 
-Handles the contact record structure
+Handles the campaign record structure
 """
 
 __author__		= "Chris Nasr"
 __version__		= "1.0.0"
 __maintainer__	= "Chris Nasr"
 __email__		= "chris@ouroboroscoding.com"
-__created__		= "2024-01-11"
+__created__		= "2024-01-16"
 
 # Ouroboros imports
 from config import config
@@ -19,11 +19,11 @@ from record_mysql import Storage
 from pathlib import Path
 
 # Create the Storage instance
-Contact = Storage(
+Campaign = Storage(
 
 	# The primary definition
 	jsonb.load(
-		'%s/definitions/admin/contact.json' % \
+		'%s/definitions/admin/campaign.json' % \
 			Path(__file__).parent.parent.parent.resolve()
 	),
 
@@ -34,18 +34,16 @@ Contact = Storage(
 			'charset': 'utf8mb4',
 			'collate': 'utf8mb4_unicode_ci',
 			'create': [
-				'_created', '_updated', '_project', 'unsubscribed',
-				'email_address', 'name', 'alias', 'company'
+				'_created', '_updated', '_project', '_sender', 'name',
+				'next_trigger', 'minimum_interval', 'maximum_interval',
+				'subject', 'content'
 			],
 			'db': config.mysql.db('contact'),
 			'indexes': {
-				'ui_project_email': {
-					'fields': [ '_project', 'email_address' ],
-					'type': 'unique'
-				},
-				'i_project': '_project'
+				'i_project': '_project',
+				'i_next_trigger': 'next_trigger'
 			},
-			'name': 'admin_contact',
+			'name': 'admin_campaign',
 			'revisions': [ 'user' ]
 		},
 
@@ -55,23 +53,6 @@ Contact = Storage(
 		} },
 		'_updated': { '__mysql__': {
 			'opts': 'not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'
-		} },
-		'unsubscribed': { '__mysql__': {
-			'opts': 'not null default 0'
-		} },
-
-		# Extended related
-		'categories': {
-
-			# Table related
-			'__mysql__': {
-				'indexes': {
-					'ui_value_parent': {
-						'fields': [ '_value', '_parent' ],
-						'type': 'unique'
-					}
-				}
-			}
-		}
+		} }
 	}
 )

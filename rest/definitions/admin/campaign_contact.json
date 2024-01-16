@@ -1,0 +1,27 @@
+{
+	"__name__": "Sender",
+
+	"_id": {
+		"__type__": "uuid"
+	},
+
+	"_campaign": {
+		"__type__": "uuid"
+	},
+
+	"_contact": {
+		"__type__": "uuid"
+	},
+
+	"sent": {
+		"__type__": "bool"
+	},
+
+	"delivered": {
+		"__type__": "bool"
+	},
+
+	"opened": {
+		"__type__": "bool"
+	}
+}

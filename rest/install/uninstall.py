@@ -16,7 +16,8 @@ import record_mysql
 import record_redis
 
 # Records
-from records.admin import category, contact, project, unsubscribe
+from records.admin import \
+	campaign, campaign_contact, category, contact, project, sender, unsubscribe
 
 # Only run if called directly
 if __name__ == '__main__':
@@ -31,9 +32,12 @@ if __name__ == '__main__':
 	}))
 
 	# Delete the User table
+	campaign.Campaign.uninstall()
+	campaign_contact.CampaignContact.uninstall()
 	category.Category.uninstall()
 	contact.Contact.uninstall()
 	project.Project.uninstall()
+	sender.Sender.uninstall()
 	unsubscribe.Unsubscribe.uninstall()
 
 	# Add the DB

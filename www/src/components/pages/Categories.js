@@ -47,7 +47,7 @@ const CategoryTree = new Tree(CategoryDef, {
 		__results__: [ '_created', '_updated', '_project', 'name' ]
 	},
 
-	_update: { __ui__: { __title__: 'Last Updated' } },
+	_updated: { __ui__: { __title__: 'Last Updated' } },
 	_project: { __ui__: {
 		__options__: ProjectOptions,
 		__title__: 'Project',

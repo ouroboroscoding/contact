@@ -40,6 +40,7 @@ import Testing from 'components/Testing';
 import Categories from 'components/pages/Categories';
 import Contacts from 'components/pages/Contacts';
 import Projects from 'components/pages/Projects';
+import Senders from 'components/pages/Senders';
 
 // Add default onCopyKey methods to Results
 Results.setOnCopyKey(() => {
@@ -95,6 +96,9 @@ export default function Site(props) {
 							} />
 							<Route path="/projects" element={
 								<Projects mobile={mobile} />
+							} />
+							<Route path="/senders" element={
+								<Senders mobile={mobile} />
 							} />
 						</Routes>
 					</Box>

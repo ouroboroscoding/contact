@@ -1,10 +1,10 @@
 /**
- * Contacts
+ * Senders
  *
- * List contacts in the system
+ * List of senders in the system
  *
  * @author Chris Nasr <chris@ouroboroscoding.com>
- * @created 2024-01-14
+ * @created 2024-01-16
  */
 
 // Ouroboros modules
@@ -27,85 +27,48 @@ import Typography from '@mui/material/Typography';
 // Project modules
 import { addError } from 'components/Errors';
 import { showSuccess } from 'components/Success';
+import { SENDER_BEING_USED } from 'errors';
 
 // Definitions
-import ContactDef from 'definitions/admin/contact';
-import { arrayFindDelete, arrayFindMerge } from '@ouroboros/tools';
-
-// Generate the project options
-const ProjectOptions = new Options.Fetch(() => {
-	return new Promise((resolve, reject) => {
-		body.read('admin', 'projects').then(resolve, reject);
-	});
-});
-const CategoryOptions = () => {
-	return new Promise((resolve, reject) => {
-		body.read('admin', 'categories').then(data => {
-			const oCategories = {};
-			for(const o of data) {
-				if(o._project in oCategories) {
-					oCategories[o._project].push([ o._id, o.name ])
-				} else {
-					oCategories[o._project] = [ [ o._id, o.name ] ]
-				}
-			}
-			resolve(oCategories);
-
-		}, reject);
-	});
-}
+import SenderDef from 'definitions/admin/sender';
 
 // Generate the Tree
-const ContactTree = new Tree(ContactDef, {
+const SenderTree = new Tree(SenderDef, {
 	__ui__: {
-		__create__: [
-			'_project', 'email_address', 'name', 'alias', 'company',
-			'categories'
-		],
-		__update__: [
-			'email_address', 'name', 'alias', 'company', 'categories'
-		],
-		__results__: [ '_created', '_updated', 'name', 'company' ]
+		__create__: [ 'email_address', 'password', 'host', 'port', 'tls' ],
+		__update__: [ 'email_address', 'password', 'host', 'port', 'tls' ],
+		__results__: [
+			'_created', '_updated', 'email_address', 'host', 'port', 'tls'
+		]
 	},
 
 	_updated: { __ui__: { __title__: 'Last Updated' } },
-	_project: { __ui__: {
-		'__options__': ProjectOptions,
-		'__title__': 'Project',
-		'__type__': 'select'
-	}},
 	email_address: { __ui__: { __title__: 'E-Mail Address' } },
-	name: { __ui__: { __title__: 'Full Name' } },
-
-	categories: { __ui__: {
-		__header__: 'Categories',
-		__title__: 'Category',
-		__type__: 'select'
-	} }
+	password: { __ui__: { __type__: 'password' } },
+	tls: { __ui__: { __title__: 'Enable TLS' } }
 });
 
 // Constants
 const GRID_SIZES = {
-	__default__: { xs: 12 },
-	_project: { xs: 12 },
-	email_address: { xs: 12, md: 6, xl: 3 },
-	name: { xs: 12, md: 6, xl: 3 },
-	alias: { xs: 12, md: 4, xl: 3 },
-	company: { xs: 12, md: 8, xl: 3 },
-	categories: { xs: 12, md: 6, xl: 3 }
+	__default__: { xs: 12, md: 6, lg: 4, xl: 3 },
+	email_address: { xs: 12, md: 6 },
+	password: { xs: 12, md: 6 },
+	host: { xs: 12, md: 6 },
+	port: { xs: 6, md: 4 },
+	tls: { xs: 6, md: 2 }
 };
 
 /**
- * Contacts
+ * Senders
  *
- * Displays current contacts with the ability to edit them, or add a new one
+ * Displays current senders with the ability to edit them, or add a new one
  *
- * @name Contacts
+ * @name Senders
  * @access public
  * @param Object props Properties passed to the component
  * @returns React.Component
  */
-export default function Contacts(props) {
+export default function Senders(props) {
 
 	// State
 	const [ create, createSet ] = useState(false);
@@ -115,16 +78,16 @@ export default function Contacts(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		const oP = ProjectOptions.subscribe(projectsSet);
-		return () => oP.unsubscribe()
+		body.read('admin', 'projects').then(projectsSet)
 	}, []);
 
 	// Project effect
 	useEffect(() => {
 		if(project == '') {
+			createSet(false);
 			resultsSet(false);
 		} else {
-			body.read('admin', 'contacts', {
+			body.read('admin', 'senders', {
 				'_project': project
 			}).then(resultsSet, error => {
 				addError(error);
@@ -135,66 +98,25 @@ export default function Contacts(props) {
 	// Called when the create form is submitted
 	function createSubmit(record) {
 
+		// Add the current project to the record
+		record._project = project;
+
 		// Create a new Promise and return it
 		return new Promise((resolve, reject) => {
 
 			// Send the create request
-			body.create('admin', 'contact', { record }).then(data => {
+			body.create('admin', 'sender', { record }).then(data => {
 
 				// Close the create form
 				createSet(false);
 
 				// Notify the user
-				showSuccess('Contact created. Refreshing contact list.');
+				showSuccess('Sender created. Refreshing sender list.');
 
-				// Resolve ok
-				resolve(true);
-
-			}, error => {
-				if(error.code === errors.DATA_FIELDS) {
-					reject(error.msg);
-				} else {
-					addError(error);
-				}
-			});
-		});
-	}
-
-	// Called to delete a contact
-	function resultRemove(key) {
-
-		// Send the delete request
-		body.delete('admin', 'contact', { _id: key }).then(data => {
-			if(data) {
-
-				// Notify the user
-				showSuccess('Contact deleted. Refreshing contact list.');
-
-				// Find the record and remove it
-				resultsSet(l => arrayFindDelete(l, '_id', key, true));
-			}
-		}, error => {
-			addError(error);
-		});
-	}
-
-	// Called when a result form is submitted
-	function updateSubmit(record, key) {
-
-		// Create a new Promise and return it
-		return new Promise((resolve, reject) => {
-
-			// Send the update request
-			body.update('admin', 'contact', {
-				_id: key,
-				record
-			}).then(data => {
-
-				// Notify the user
-				showSuccess('Contact updated. Refreshing contact list.');
-
-				// Find the record and update it
-				resultsSet(l => arrayFindMerge(l, '_id', key, record, true));
+				// Fetch the latest results
+				body.read('admin', 'senders', {
+					_project: project
+				}).then(resultsSet);
 
 				// Resolve ok
 				resolve(true);
@@ -210,11 +132,84 @@ export default function Contacts(props) {
 		});
 	}
 
+	// Calle when create button clicked
+	function createToggle() {
+
+		// If we're already enabled
+		if(create) {
+			createSet(false);
+		} else {
+			if(project === '') {
+				showSuccess('Please select a Project first');
+			} else {
+				createSet(true);
+			}
+		}
+	}
+
+	// Called to delete a sender
+	function resultRemove(key) {
+
+		// Send the delete request
+		body.delete('admin', 'sender', { _id: key }).then(data => {
+			if(data) {
+
+				// Notify the user
+				showSuccess('Sender deleted. Refreshing sender list.');
+
+				// Fetch the latest results
+				body.read('admin', 'senders', {
+					_project: project
+				}).then(resultsSet);
+			}
+		}, error => {
+			if(error.code === SENDER_BEING_USED) {
+				addError('Sender is still being used by active campaigns: ' +
+						JSON.stringify(error.msg, null, 4));
+			} else {
+				addError(error);
+			}
+		});
+	}
+
+	// Called when a result form is submitted
+	function updateSubmit(record, key) {
+
+		// Create a new Promise and return it
+		return new Promise((resolve, reject) => {
+
+			// Send the update request
+			body.update('admin', 'sender', {
+				_id: key,
+				record
+			}).then(data => {
+
+				// Notify the user
+				showSuccess('Sender updated. Refreshing sender list.');
+
+				// Fetch the latest results
+				body.read('admin', 'senders', {
+					_project: project
+				}).then(resultsSet);
+
+				// Resolve ok
+				resolve(true);
+
+			}, error => {
+				if(error.code === errors.DATA_FIELDS) {
+					reject(error.msg);
+				} else {
+					addError(error);
+				}
+			});
+		});
+	}
+
 	// Render
 	return (
-		<Box id="contacts" className="flexDynamic padding">
+		<Box id="senders" className="flexDynamic padding">
 			<Box className="pageHeader flexColumns">
-				<h1 className="flexDynamic">Contacts</h1>
+				<h1 className="flexDynamic">Senders</h1>
 				<Select
 					native
 					size="small"
@@ -222,12 +217,12 @@ export default function Contacts(props) {
 					value={project}
 				>
 					<option value="">Select Project...</option>
-					{projects.map(l =>
-						<option value={l[0]}>{l[1]}</option>
+					{projects.map(o =>
+						<option value={o._id}>{o.name}</option>
 					)}
 				</Select>
-				<Tooltip className="flexStatic" title="Create new Contact">
-					<IconButton onClick={() => createSet(b => !b)} className={create ? 'open' : null}>
+				<Tooltip className="flexStatic" title={project !== '' ? 'Create new Sender' : 'Select a Project'}>
+					<IconButton onClick={createToggle} className={create ? 'open' : null}>
 						<i className="fa-solid fa-circle-plus" />
 					</IconButton>
 				</Tooltip>
@@ -235,15 +230,10 @@ export default function Contacts(props) {
 			{create &&
 				<Paper>
 					<Form
-						dynamicOptions={[{
-							node: 'categories',
-							trigger: '_project',
-							options: CategoryOptions
-						}]}
 						gridSizes={GRID_SIZES}
 						onCancel={() => createSet(false)}
 						onSubmit={createSubmit}
-						tree={ContactTree}
+						tree={SenderTree}
 						type="create"
 					/>
 				</Paper>
@@ -251,20 +241,15 @@ export default function Contacts(props) {
 			{(results === false &&
 				<Typography>Please select a project</Typography>
 			) || (results.length === 0 &&
-				<Typography>No Contacts found.</Typography>
+				<Typography>No Senders found.</Typography>
 			) ||
 				<Results
 					data={results}
-					dynamicOptions={[{
-						node: 'categories',
-						trigger: '_project',
-						options: CategoryOptions
-					}]}
 					gridSizes={GRID_SIZES}
 					onDelete={resultRemove}
 					onUpdate={updateSubmit}
-					orderBy="name"
-					tree={ContactTree}
+					orderBy="email_address"
+					tree={SenderTree}
 				/>
 			}
 		</Box>
@@ -272,6 +257,6 @@ export default function Contacts(props) {
 }
 
 // Valid props
-Contacts.propTypes = {
+Senders.propTypes = {
 	mobile: PropTypes.bool.isRequired
 }

@@ -16,7 +16,8 @@ import record_mysql
 import record_redis
 
 # Records
-from records.admin import category, contact, project, unsubscribe
+from records.admin import \
+	campaign, campaign_contact, category, contact, project, sender, unsubscribe
 
 # Only run if called directly
 if __name__ == '__main__':
@@ -36,7 +37,10 @@ if __name__ == '__main__':
 	)
 
 	# Create the tables
+	campaign.Campaign.install()
+	campaign_contact.CampaignContact.install()
 	category.Category.install()
 	contact.Contact.install()
 	project.Project.install()
+	sender.Sender.install()
 	unsubscribe.Unsubscribe.install()

@@ -1,0 +1,51 @@
+{
+	"__name__": "Campaign",
+
+	"_id": {
+		"__type__": "uuid"
+	},
+
+	"_created": {
+		"__type__": "timestamp"
+	},
+
+	"_updated": {
+		"__type__": "timestamp"
+	},
+
+	"_project": {
+		"__type__": "uuid"
+	},
+
+	"_sender": {
+		"__type__": "uuid"
+	},
+
+	"name": {
+		"__type__": "string",
+		"__maximum__": 63
+	},
+
+	"next_trigger": {
+		"__type__": "timestamp",
+		"__optional__": true
+	},
+
+	"minimum_interval": {
+		"__type__": "uint"
+	},
+
+	"maximum_interval": {
+		"__type__": "uint"
+	},
+
+	"subject": {
+		"__type__": "string",
+		"__maximum__": 50
+	},
+
+	"content": {
+		"__type__": "string",
+		"__maximum__": 5000
+	}
+}

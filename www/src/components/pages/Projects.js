@@ -40,7 +40,7 @@ const ProjectTree = new Tree(ProjectDef, {
 		]
 	},
 
-	_update: { __ui__: { __title__: 'Last Updated' } },
+	_updated: { __ui__: { __title__: 'Last Updated' } },
 	name: { __ui__: { __title__: 'Project Name' } },
 	short_code: { __ui__: { __title__: 'Short Code ( 3 or 4 letters )' } }
 });

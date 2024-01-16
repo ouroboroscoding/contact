@@ -162,9 +162,10 @@ class Unsubscribe(bottle.Bottle):
 		except RecordDuplicate:
 			pass
 
-		# Delete the contact so it can't be used anymore
+		# Mark the contact as unsubscribed so it can't be used anymore
 		try:
-			oContact.remove(revision_info = { 'user': 'unsubscribe_confirm' })
+			oContact['unsubscribed'] = True
+			oContact.save(revision_info = { 'user': 'unsubscribe_confirm' })
 		except Exception:
 			pass
 
@@ -225,9 +226,10 @@ class Unsubscribe(bottle.Bottle):
 		except RecordDuplicate:
 			pass
 
-		# Delete the contact so it can't be used anymore
+		# Mark the contact as unsubscribed so it can't be used anymore
 		try:
-			oContact.remove(revision_info = { 'user': 'unsubscribe_oneclick' })
+			oContact['unsubscribed'] = True
+			oContact.save(revision_info = { 'user': 'unsubscribe_confirm' })
 		except Exception:
 			pass
 

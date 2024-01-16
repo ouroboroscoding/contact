@@ -134,6 +134,12 @@ export default function Header(props) {
 								<ListItemText primary="Categories" />
 							</ListItemButton>
 						</Link>
+						<Link to="/senders" onClick={menuOff}>
+							<ListItemButton selected={location.pathname === '/senders'}>
+								<ListItemIcon><i className="fa-solid fa-at" /></ListItemIcon>
+								<ListItemText primary="Senders" />
+							</ListItemButton>
+						</Link>
 						<Link to="/contacts" onClick={menuOff}>
 							<ListItemButton selected={location.pathname === '/contacts'}>
 								<ListItemIcon><i className="fa-solid fa-users" /></ListItemIcon>

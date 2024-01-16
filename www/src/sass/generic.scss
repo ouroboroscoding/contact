@@ -5,9 +5,12 @@
 .pageHeader {
 	margin-bottom: 20px;
 
+	button {
+		margin-left: 10px;
+	}
+
 	i.fa-solid {
 		font-size: 2rem;
-		margin-left: 10px;
 	}
 
 	.open {
@@ -15,4 +18,8 @@
 			color: $cOpen
 		}
 	}
+}
+
+.field__created, .field__updated {
+	width: 175px;
 }

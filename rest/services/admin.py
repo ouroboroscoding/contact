@@ -20,10 +20,15 @@ import undefined
 from operator import itemgetter
 
 # Import records
-from records.admin import category, contact, project, unsubscribe
+from records.admin import \
+	campaign, campaign_contact, category, contact, project, sender, \
+	unsubscribe
 
 # Import errors
-from shared.errors import EMAIL_UNSUBSCRIBED
+from shared.errors import \
+	CONTACT_UNSUBSCRIBED, \
+	EMAIL_UNSUBSCRIBED, \
+	SENDER_BEING_USED
 
 REPLACE_ME = '00000000-0000-0000-0000-000000000000'
 
@@ -219,7 +224,7 @@ class Admin(Service):
 		# Remove any fields found that can't be altered by the user
 		without(
 			req.data.record,
-			['_id', '_created', '_updated', '_project'],
+			[ '_id', '_created', '_updated', '_project' ],
 			True
 		)
 
@@ -383,6 +388,10 @@ class Admin(Service):
 		if not oContact:
 			return Error(errors.DB_NO_RECORD, [ req.data._id, 'contact' ])
 
+		# If the contact is unsubscribed, don't allow any updates
+		if oContact['unsubscribed']:
+			return Error(CONTACT_UNSUBSCRIBED, req.data._id)
+
 		# If we have categories
 		if 'categories' in req.data.record:
 
@@ -396,7 +405,7 @@ class Admin(Service):
 		# Remove any fields found that can't be altered by the user
 		without(
 			req.data.record,
-			['_id', '_created', '_updated', '_project'],
+			[ '_id', '_created', '_updated', '_project', 'unsubscribed' ],
 			True
 		)
 
@@ -578,7 +587,7 @@ class Admin(Service):
 		# Remove any fields found that can't be altered by the user
 		without(
 			req.data.record,
-			['_id', '_created', '_updated', 'short_code'],
+			[ '_id', '_created', '_updated', 'short_code' ],
 			True
 		)
 
@@ -618,3 +627,207 @@ class Admin(Service):
 
 		# Find and return the projects
 		return Response(lProjects)
+
+	def sender_create(self, req: jobject) -> Response:
+		"""Sender (create)
+
+		Creates a new sender in an existing project in the system
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# If we are missing the record
+		if 'record' not in req.data:
+			return Error(errors.DATA_FIELDS, [ [ 'record', 'missing' ] ])
+
+		# If the record is not a dict
+		if not isinstance(req.data.record, dict):
+			return Error(errors.DATA_FIELDS, [ [ 'record', 'invalid' ] ])
+
+		# Check for project
+		if '_project' not in req.data.record:
+			return Error(errors.DATA_FIELDS, [ [ '_project', 'missing' ] ])
+
+		# If the project doesn't exist
+		if not project.Project.exists(req.data.record._project):
+			return Error(
+				errors.DB_NO_RECORD,
+				[ req.data.record._project, 'project' ]
+			)
+
+		# Create and validate the record
+		try:
+			sID = sender.Sender.add(
+				req.data.record,
+				revision_info = { 'user': REPLACE_ME }
+			)
+		except ValueError as e:
+			return Error(errors.DATA_FIELDS, e.args)
+		except RecordDuplicate as e:
+			return Error(errors.DB_DUPLICATE, e.args)
+
+		# Return the result
+		return Response(sID)
+
+	def sender_delete(self, req: jobject) -> Response:
+		"""Sender (delete)
+
+		Deletes an existing sender from the system
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# Check the ID
+		if '_id' not in req.data:
+			return Error(errors.DATA_FIELDS, [ [ '_id', 'missing' ] ])
+
+		# If the sender doesn't exist
+		if not sender.Sender.exists(req.data._id):
+			return Error(errors.DB_NO_RECORD, [ req.data._id, 'sender' ])
+
+		# Look for campaigns with the sender
+		lCampaigns = campaign.Campaign.filter({
+			'_sender': req.data._id
+		}, raw = [ '_id' ])
+
+		# If there's any campaigns
+		if lCampaigns:
+
+			# Look for any campaign contacts still not sent
+			dCampaignContacts = campaign_contact.unsent_by_campaigns(
+				[ d['_id'] for d in lCampaigns ]
+			)
+
+			# If there's any
+			if dCampaignContacts:
+				return Error(SENDER_BEING_USED, dCampaignContacts)
+
+		# Delete the record
+		dRes = sender.Sender.remove(
+			req.data._id,
+			revision_info = { 'user': REPLACE_ME }
+		)
+
+		# If nothing was deleted
+		if dRes == None:
+			return Error(errors.DB_DELETE_FAILED, [ req.data._id, 'sender' ])
+
+		# Return OK
+		return Response(dRes)
+
+	def sender_read(self, req: jobject) -> Response:
+		"""Sender (read)
+
+		Fetches and returns an existing sender
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# Check for ID
+		if '_id' not in req.data:
+			return Error(errors.DATA_FIELDS, [ [ '_id', 'missing' ] ])
+
+		# Fetch the record
+		dSender = sender.Sender.get(req.data._id, raw = True)
+		if not dSender:
+			return Error(errors.DB_NO_RECORD, [ req.data._id, 'sender' ])
+
+		# Strip out the password
+		del dSender['password']
+
+		# Return the record
+		return Response(dSender)
+
+	def sender_update(self, req: jobject) -> Response:
+		"""Sender (update)
+
+		Updates an existing sender
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# Check minimum fields
+		try: evaluate(req.data, [ '_id', 'record' ])
+		except ValueError as e:
+			return Error(
+				errors.DATA_FIELDS, [ [ k, 'missing' ] for k in e.args ])
+
+		# If the record is not a dict
+		if not isinstance(req.data.record, dict):
+			return Error(errors.DATA_FIELDS, [ [ 'record', 'invalid' ] ])
+
+		# Find the sender
+		oSender = sender.Sender.get(req.data._id)
+		if not oSender:
+			return Error(errors.DB_NO_RECORD, [ req.data._id, 'sender' ])
+
+		# Remove any fields found that can't be altered by the user
+		without(
+			req.data.record,
+			[ '_id', '_created', '_updated', '_project' ],
+			True
+		)
+
+		# Update it using the record data sent
+		try:
+			dChanges = oSender.update(req.data.record)
+		except RecordDuplicate as e:
+			return Error(errors.DB_DUPLICATE, e.args)
+
+		# Test if the updates are valid
+		if not oSender.valid():
+			return Error(errors.DATA_FIELDS, oSender.errors)
+
+		# Save the record and store the result
+		bRes = oSender.save(revision_info = { 'user' : REPLACE_ME })
+
+		# Return the changes or False
+		return Response(bRes and dChanges or False)
+
+	def senders_read(self, req: jobject) -> Response:
+		"""Senders (read)
+
+		Fetches senders by project
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# If the project is not passed
+		if '_project' not in req.data:
+			return Error(errors.DATA_FIELDS, [ [ '_project', 'missing' ] ])
+
+		# Request the senders
+		lSenders = sender.Sender.filter({
+			'_project': req.data._project
+		}, raw = True)
+
+		# Sort them by email
+		lSenders.sort(key = itemgetter('email_address'))
+
+		# Try to remove all passwords
+		for d in lSenders:
+			try: del d['password']
+			except: pass
+
+		# Return the records
+		return Response(lSenders)
