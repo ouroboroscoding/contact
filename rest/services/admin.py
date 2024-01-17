@@ -13,6 +13,7 @@ __created__		= "2024-01-07"
 from body import Error, errors, Response, Service
 from jobject import jobject
 from record.exceptions import RecordDuplicate
+from record_mysql import Literal as MySQL_Literal
 from tools import evaluate, without
 import undefined
 
@@ -60,6 +61,113 @@ class Admin(Service):
 			Admin
 		"""
 		return self
+
+	def campaign_create(self, req: jobject) -> Response:
+		"""Campaign (create)
+
+		Creates a new campaign, paused by default
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# Check for fields we need to validate outside of the format
+		try: evaluate(req.data.record, [
+			[ 'record', [
+				'_project', '_sender', 'min_interval', 'max_interval'
+			] ],
+			'contacts'
+		])
+		except ValueError as e:
+			return Error(
+				errors.DATA_FIELDS,
+				[ [ 'record.%' % s, 'missing' ] for s in e.args ]
+			)
+
+		# Make sure the intervals are proper unsigned ints
+		lIntErrors = []
+		try: req.data.record.min_interval = \
+			int(req.data.record.min_interval)
+		except ValueError:
+			lIntErrors.append([ 'record.max_interval', 'invalid' ])
+		try: req.data.record.max_interval = \
+			int(req.data.record.max_interval)
+		except ValueError:
+			lIntErrors.append([ 'record.max_interval', 'invalid' ])
+		if lIntErrors: return Error(errors.DATA_FIELDS, )
+
+		# Make sure min is actually less than max
+		if req.data.record.min_interval >= req.data.record.max_interval:
+			return Error(
+				errors.DATA_FIELDS,
+				[ 'records.max_interval', 'must be larger than minimum' ]
+			)
+
+		# Check the project exists
+		if not project.Project.exists(req.data.record._project):
+			return Error(
+				errors.DB_NO_RECORD,
+				[ req.data.record._project, 'project' ]
+			)
+
+		# Get the sender
+		dSender = sender.Sender.get(
+			req.data.record._sender,
+			raw = [ '_project' ]
+		)
+		if not dSender:
+			return Error(
+				errors.DB_NO_RECORD,
+				[ req.data.record._sender, 'sender' ]
+			)
+
+		# If the project associated with the sender doesn't match this
+		#	campaign's project, we have a problem
+		if dSender['_project'] != req.data.record._project:
+			return Error(errors.RIGHTS, 'invalid sender for project')
+
+		# Make absolutely sure the contacts are unique
+		lContacts = list(set(req.data.contacts))
+
+		# Make sure they all exist by fetching them all
+		lValidContacts = [ d['_id'] for d in contact.Contact.get(
+			lContacts, raw = [ '_id' ]
+		) ]
+
+		# If the counts don't match
+		if len(lValidContacts) != len(lContacts):
+
+			# Get the list of IDs that don't exist and return them in an error
+			return Error(
+				errors.DB_NO_RECORD, [
+					[ _id for _id in lContacts if _id not in lValidContacts ],
+					'contact'
+				]
+			)
+
+		# If the start now flag is set
+		if 'start_now' in req.data and req.data.start_now:
+			req.data.record.next_trigger = MySQL_Literal('CURRENT_TIMESTAMP')
+
+		# Create and validate the record
+		try:
+			sID = campaign.Campaign.add(
+				req.data.record,
+				revision_info = { 'user': REPLACE_ME }
+			)
+		except ValueError as e:
+			return Error(errors.DATA_FIELDS, e.args)
+		except RecordDuplicate as e:
+			return Error(errors.DB_DUPLICATE, e.args)
+
+		# Add each of the contacts
+		campaign_contact.add_contacts(sID, lContacts)
+
+		# Return the ID
+		return Response(sID)
 
 	def categories_read(self, req: jobject) -> Response:
 		"""Categories (read)
@@ -658,6 +766,10 @@ class Admin(Service):
 				errors.DB_NO_RECORD,
 				[ req.data.record._project, 'project' ]
 			)
+
+		# If TLS not set, assume False
+		if 'tls' not in req.data.record:
+			req.data.record.tls = False
 
 		# Create and validate the record
 		try:

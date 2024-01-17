@@ -31,11 +31,11 @@
 		"__optional__": true
 	},
 
-	"minimum_interval": {
+	"min_interval": {
 		"__type__": "uint"
 	},
 
-	"maximum_interval": {
+	"max_interval": {
 		"__type__": "uint"
 	},
 

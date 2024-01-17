@@ -146,6 +146,25 @@ export default function Header(props) {
 								<ListItemText primary="Contacts" />
 							</ListItemButton>
 						</Link>
+						<ListItemButton onClick={ev => subMenuToggle('campaigns')}>
+							<ListItemIcon><i className="fa-solid fa-inbox" /></ListItemIcon>
+							<ListItemText primary="Campaigns" />
+							{subs.campaigns ? <i className="fa-solid fa-chevron-up" /> : <i className="fa-solid fa-chevron-down" />}
+						</ListItemButton>
+						<Collapse in={subs.campaigns || false} timeout="auto" unmountOnExit>
+							<Link to="/campaigns" onClick={menuOff}>
+								<ListItemButton selected={location.pathname === '/campaigns'}>
+									<ListItemIcon><i className="fa-solid fa-envelopes-bulk" /></ListItemIcon>
+									<ListItemText primary="Existing" />
+								</ListItemButton>
+							</Link>
+							<Link to="/campaigns/new" onClick={menuOff}>
+								<ListItemButton selected={location.pathname === '/campaigns/new'}>
+									<ListItemIcon><i className="fa-solid fa-envelope" /></ListItemIcon>
+									<ListItemText primary="Start New" />
+								</ListItemButton>
+							</Link>
+						</Collapse>
 					</List>
 					<Box className="flexStatic footer">
 						Version {process.env.REACT_APP_VERSION}

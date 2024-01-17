@@ -14,7 +14,7 @@ __created__		= "2024-01-16"
 from config import config
 import jsonb
 from record_mysql import Storage
-from record_mysql.server import select, Select
+from record_mysql.server import execute, select, Select
 
 # Python imports
 from pathlib import Path
@@ -85,3 +85,34 @@ def unsent_by_campaigns(campaign_ids: List[str]) -> Dict[str, int]:
 		Select.HASH,
 		host = dStruct.host
 	)
+
+def add_contacts(campaign_id: str, contact_ids: List[str]) -> None:
+	"""Add Contacts
+
+	Adds every contact added to the given campaign in a single statement
+
+	Arguments:
+		campaign_id (str): The ID of the campaign to add the contacts
+		contact_ids (str[]): A list of contact IDs to add
+
+	Returns:
+		None
+	"""
+
+	# Get the struct
+	dStruct = CampaignContact._parent._table._struct
+
+	# Generate the insert template
+	sValues = "(UUID(), '%s', '%%s')"
+
+	# Generate the SQL
+	sSQL = "INSERT IGNORE INTO `%(db)s`.`%(table)s`" \
+			" (`_id`, `_campaign`, `_contact`)\n" \
+			"VALUES %(rows)s" % {
+		'db': dStruct.db,
+		'table': dStruct.table,
+		'rows': ',\n'.join([ sValues % s for s in contact_ids ])
+	}
+
+	# Run the insert and return the rows added
+	return execute(sSQL, dStruct.host)

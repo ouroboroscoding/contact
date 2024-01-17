@@ -14,14 +14,17 @@
 	},
 
 	"sent": {
-		"__type__": "bool"
+		"__type__": "timestamp",
+		"__optional__": true
 	},
 
 	"delivered": {
-		"__type__": "bool"
+		"__type__": "timestamp",
+		"__optional__": true
 	},
 
 	"opened": {
-		"__type__": "bool"
+		"__type__": "timestamp",
+		"__optional__": true
 	}
 }
