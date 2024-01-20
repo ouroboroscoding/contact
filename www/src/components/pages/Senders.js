@@ -257,6 +257,4 @@ export default function Senders(props) {
 }
 
 // Valid props
-Senders.propTypes = {
-	mobile: PropTypes.bool.isRequired
-}
+Senders.propTypes = { }

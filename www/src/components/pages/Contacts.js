@@ -272,6 +272,4 @@ export default function Contacts(props) {
 }
 
 // Valid props
-Contacts.propTypes = {
-	mobile: PropTypes.bool.isRequired
-}
+Contacts.propTypes = { }

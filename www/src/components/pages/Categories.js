@@ -208,6 +208,4 @@ export default function Categories(props) {
 }
 
 // Valid props
-Categories.propTypes = {
-	mobile: PropTypes.bool.isRequired
-}
+Categories.propTypes = { }

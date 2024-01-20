@@ -49,7 +49,6 @@ export default function Testing(props) {
 			<p>Version: {process.env.REACT_APP_VERSION}</p>
 			<p>Location: {location.pathname}</p>
 			<p>Width: {width}</p>
-			<p>Mobile: {props.mobile ? 'true' : 'false'}</p>
 		</div>
 	)
 }

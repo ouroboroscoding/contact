@@ -59,46 +59,30 @@ Results.setOnCopyKey(() => {
  */
 export default function Site(props) {
 
-	// State
-	let [mobile, mobileSet] = useState(document.documentElement.clientWidth < 600 ? true : false);
-
-	// Startup effect
-	useEffect(() => {
-
-		// Track resize
-		let resize = () => mobileSet(document.documentElement.clientWidth < 600 ? true : false);
-		window.addEventListener('resize', resize);
-
-		// Clear tracking
-		return () => {
-			window.removeEventListener('resize', resize);
-		}
-	}, []);
-
 	return (
 		<StyledEngineProvider injectFirst={true}>
 			<ThemeProvider theme={Theme}>
 				<BrowserRouter>
 					{['development', 'staging'].includes(process.env.NODE_ENV) &&
-						<Testing mobile={mobile} />
+						<Testing />
 					}
 					<Network />
 					<Success />
 					<Errors />
-					<Header mobile={mobile} />
+					<Header />
 					<Box className="flexDynamic">
 						<Routes>
 							<Route path="/categories" element={
-								<Categories mobile={mobile} />
+								<Categories />
 							} />
 							<Route path="/contacts" element={
-								<Contacts mobile={mobile} />
+								<Contacts />
 							} />
 							<Route path="/projects" element={
-								<Projects mobile={mobile} />
+								<Projects />
 							} />
 							<Route path="/senders" element={
-								<Senders mobile={mobile} />
+								<Senders />
 							} />
 						</Routes>
 					</Box>

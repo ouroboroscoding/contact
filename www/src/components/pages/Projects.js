@@ -209,6 +209,4 @@ export default function Projects(props) {
 }
 
 // Valid props
-Projects.propTypes = {
-	mobile: PropTypes.bool.isRequired
-}
+Projects.propTypes = { }

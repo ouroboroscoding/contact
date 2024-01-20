@@ -176,6 +176,4 @@ export default function Header(props) {
 }
 
 // Valid props
-Header.propTypes = {
-	mobile: PropTypes.bool.isRequired
-}
+Header.propTypes = { }
