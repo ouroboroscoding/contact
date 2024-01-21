@@ -15,10 +15,9 @@ import '../sass/site.scss';
 
 // Ouroboros modules
 import { Results } from '@ouroboros/define-mui';
-import events from '@ouroboros/events';
 
 // NPM modules
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 // Material UI
@@ -29,6 +28,9 @@ import { StyledEngineProvider } from '@mui/material/styles';
 // CSS Theme
 import Theme from 'components/Theme'
 
+// Site data/tools modules
+import Message from 'message';
+
 // Site component modules
 import Errors from 'components/Errors';
 import Header from 'components/Header';
@@ -37,6 +39,8 @@ import Success from 'components/Success';
 import Testing from 'components/Testing';
 
 // Site pages
+import CampaignsExisting from 'components/pages/Campaigns/Existing';
+import CampaignNew from 'components/pages/Campaigns/New';
 import Categories from 'components/pages/Categories';
 import Contacts from 'components/pages/Contacts';
 import Projects from 'components/pages/Projects';
@@ -44,7 +48,7 @@ import Senders from 'components/pages/Senders';
 
 // Add default onCopyKey methods to Results
 Results.setOnCopyKey(() => {
-	events.get('success').trigger('Record ID copied to clipboard!');
+	Message.success('Record ID copied to clipboard!');
 });
 
 /**
@@ -72,18 +76,14 @@ export default function Site(props) {
 					<Header />
 					<Box className="flexDynamic">
 						<Routes>
-							<Route path="/categories" element={
-								<Categories />
-							} />
-							<Route path="/contacts" element={
-								<Contacts />
-							} />
-							<Route path="/projects" element={
-								<Projects />
-							} />
-							<Route path="/senders" element={
-								<Senders />
-							} />
+							<Route path="/campaigns">
+								<Route index element={ <CampaignsExisting /> } />
+								<Route path="new" element={ <CampaignNew /> } />
+							</Route>
+							<Route path="/categories" element={ <Categories /> } />
+							<Route path="/contacts" element={ <Contacts /> } />
+							<Route path="/projects" element={ <Projects /> } />
+							<Route path="/senders" element={ <Senders /> } />
 						</Routes>
 					</Box>
 				</BrowserRouter>

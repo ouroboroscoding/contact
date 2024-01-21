@@ -129,23 +129,74 @@ class Admin(Service):
 		if dSender['_project'] != req.data.record._project:
 			return Error(errors.RIGHTS, 'invalid sender for project')
 
-		# Make absolutely sure the contacts are unique
-		lContacts = list(set(req.data.contacts))
+		# If we are adding a list of contacts by ID, or by categories they are
+		#	in
+		if req.data.contacts in [ 'categories', 'ids' ]:
 
-		# Make sure they all exist by fetching them all
-		lValidContacts = [ d['_id'] for d in contact.Contact.get(
-			lContacts, raw = [ '_id' ]
-		) ]
+			# If the list is missing
+			if 'contacts_list' not in req.data:
+				return Error(
+					errors.DATA_FIELDS,
+					[ [ 'contacts_list', 'missing' ] ]
+				)
 
-		# If the counts don't match
-		if len(lValidContacts) != len(lContacts):
+			# If we are adding categories
+			if req.data.contacts == 'categories':
 
-			# Get the list of IDs that don't exist and return them in an error
+				# Make absolutely sure the list is unique
+				lCategories = list(set(req.data.contacts_list))
+
+				# Make sure they all exist by fetching them all
+				lValidCategories = [
+					d['_id'] for d in category.Category.filter({
+						'_project': req.data.record._project,
+						'_id': lCategories
+					}, raw = [ '_id' ]
+				) ]
+
+				# If the counts don't match
+				if len(lValidCategories) != len(lCategories):
+
+					# Get the list of IDs that don't exist and return them in an
+					#	error
+					return Error(
+						errors.DB_NO_RECORD, [
+							[ _id for _id in lCategories \
+								if _id not in lValidCategories ],
+							'category'
+						]
+					)
+
+			# Else, if we are adding contacts directly
+			elif req.data.contacts == 'ids':
+
+				# Make absolutely sure the contacts are unique
+				lContacts = list(set(req.data.contacts_list))
+
+				# Make sure they all exist by fetching them all
+				lValidContacts = [ d['_id'] for d in contact.Contact.get(
+					lContacts, raw = [ '_id' ]
+				) ]
+
+				# If the counts don't match
+				if len(lValidContacts) != len(lContacts):
+
+					# Get the list of IDs that don't exist and return them in an
+					#	error
+					return Error(
+						errors.DB_NO_RECORD, [
+							[ _id for _id in lContacts \
+								if _id not in lValidContacts ],
+							'contact'
+						]
+					)
+
+		# Else, we better have received 'all'
+		elif req.data.contacts != 'all':
 			return Error(
-				errors.DB_NO_RECORD, [
-					[ _id for _id in lContacts if _id not in lValidContacts ],
-					'contact'
-				]
+				errors.DATA_FIELDS,
+				[ [ 'contacts',
+					'must be one of "all", "categories", or "ids"' ] ]
 			)
 
 		# If the start now flag is set
@@ -163,8 +214,17 @@ class Admin(Service):
 		except RecordDuplicate as e:
 			return Error(errors.DB_DUPLICATE, e.args)
 
-		# Add each of the contacts
-		campaign_contact.add_contacts(sID, lContacts)
+		# If we are adding all the projects contacts
+		if req.data.contacts == 'all':
+			campaign_contact.add_contacts_all(sID, req.data.record._project)
+
+		# Else, if we are adding contacts by project categories
+		elif req.data.contacts == 'categories':
+			campaign_contact.add_contacts_by_categories(sID, lCategories)
+
+		# Else, if we are adding by ID
+		elif req.data.contacts == 'ids':
+			campaign_contact.add_contacts(sID, lContacts)
 
 		# Return the ID
 		return Response(sID)

@@ -10,10 +10,9 @@
 // Ouroboros modules
 import body, { errors } from '@ouroboros/body';
 import { Tree } from '@ouroboros/define';
-import { Form, Options, Results } from '@ouroboros/define-mui';
+import { Form, Results } from '@ouroboros/define-mui';
 
 // NPM modules
-import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 
 // Material UI
@@ -83,7 +82,7 @@ export default function Senders(props) {
 
 	// Project effect
 	useEffect(() => {
-		if(project == '') {
+		if(project === '') {
 			createSet(false);
 			resultsSet(false);
 		} else {

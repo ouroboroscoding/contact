@@ -10,12 +10,10 @@
 
 // Ouroboros modules
 import body from '@ouroboros/body';
-import { cookies, safeLocalStorage } from '@ouroboros/browser';
+import { safeLocalStorage } from '@ouroboros/browser';
 import clone from '@ouroboros/clone';
-import events from '@ouroboros/events';
 
 // NPM modules
-import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 

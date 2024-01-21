@@ -13,7 +13,6 @@ import { Tree } from '@ouroboros/define';
 import { Form, Options, Results } from '@ouroboros/define-mui';
 
 // NPM modules
-import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 
 // Material UI
@@ -121,7 +120,7 @@ export default function Contacts(props) {
 
 	// Project effect
 	useEffect(() => {
-		if(project == '') {
+		if(project === '') {
 			resultsSet(false);
 		} else {
 			body.read('admin', 'contacts', {

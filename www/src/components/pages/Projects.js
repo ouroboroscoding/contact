@@ -13,7 +13,6 @@ import { Tree } from '@ouroboros/define';
 import { Form, Results } from '@ouroboros/define-mui';
 
 // NPM modules
-import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 
 // Material UI

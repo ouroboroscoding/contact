@@ -20,6 +20,9 @@ from record_mysql.server import execute, select, Select
 from pathlib import Path
 from typing import Dict, List
 
+# Other records
+from records.admin.contact import Contact
+
 # Create the Storage instance
 CampaignContact = Storage(
 
@@ -86,10 +89,88 @@ def unsent_by_campaigns(campaign_ids: List[str]) -> Dict[str, int]:
 		host = dStruct.host
 	)
 
-def add_contacts(campaign_id: str, contact_ids: List[str]) -> None:
-	"""Add Contacts
+def add_contacts_all(campaign_id: str, project_id: str) -> None:
+	"""Add Contacts All
 
-	Adds every contact added to the given campaign in a single statement
+	Adds every single contact in the given project's list
+
+	Arguments:
+		campaign_id (str): The ID of the campaign to add the contacts
+		project_id (str): The ID of the project to find contacts in
+
+	Returns:
+		None
+	"""
+
+	# Get the struct
+	dStruct = CampaignContact._parent._table._struct
+
+	# Get the contact struct
+	dContact = Contact._parent._table._struct
+
+	# Generate the SQL
+	sSQL = "INSERT IGNORE INTO `%(db)s`.`%(table)s`" \
+			" (`_id`, `_campaign`, `_contact`)\n" \
+			"SELECT UUID(), '%(campaign)s', `_id`\n" \
+			"FROM `%(cdb)s`.`%(ctable)s`\n" \
+			"WHERE `_project` = '%(project)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.table,
+		'campaign': campaign_id,
+		'cdb': dContact.db,
+		'ctable': dContact.table,
+		'project': project_id
+	}
+
+	print(sSQL)
+
+	# Run the insert and return the number of rows added
+	return execute(sSQL, dStruct.host)
+
+def add_contacts_by_categories(
+	campaign_id: str, category_ids: List[str]
+) -> None:
+	"""Add Contacts by Categories
+
+	Adds every single contact found in the given categories' list
+
+	Arguments:
+		campaign_id (str): The ID of the campaign to add the contacts
+		category_ids (str[]): The IDs of the categories to find contacts in
+
+	Returns:
+		None
+	"""
+
+	# Get the struct
+	dStruct = CampaignContact._parent._table._struct
+
+	# Get the contact categories struct
+	dCategories = Contact._parent._complex['categories']._table._struct
+
+	# Generate the SQL
+	sSQL = "INSERT IGNORE INTO `%(db)s`.`%(table)s`" \
+			" (`_id`, `_campaign`, `_contact`)\n" \
+			"SELECT DISTINCT UUID(), '%(campaign)s', `_parent`\n" \
+			"FROM `%(cdb)s`.`%(ctable)s`\n" \
+			"WHERE `_value` IN ('%(categories)s')" % {
+		'db': dStruct.db,
+		'table': dStruct.table,
+		'campaign': campaign_id,
+		'cdb': dCategories.db,
+		'ctable': dCategories.table,
+		'categories': '\',\''.join(category_ids)
+	}
+
+	print(sSQL)
+
+	# Run the insert and return the number of rows added
+	return execute(sSQL, dStruct.host)
+
+def add_contacts_list(campaign_id: str, contact_ids: List[str]) -> None:
+	"""Add Contacts List
+
+	Adds the contacts passed to the given campaign in a single statement
 
 	Arguments:
 		campaign_id (str): The ID of the campaign to add the contacts
@@ -103,7 +184,7 @@ def add_contacts(campaign_id: str, contact_ids: List[str]) -> None:
 	dStruct = CampaignContact._parent._table._struct
 
 	# Generate the insert template
-	sValues = "(UUID(), '%s', '%%s')"
+	sValues = "(UUID(), '%s', '%%s')" % campaign_id
 
 	# Generate the SQL
 	sSQL = "INSERT IGNORE INTO `%(db)s`.`%(table)s`" \
@@ -114,5 +195,7 @@ def add_contacts(campaign_id: str, contact_ids: List[str]) -> None:
 		'rows': ',\n'.join([ sValues % s for s in contact_ids ])
 	}
 
-	# Run the insert and return the rows added
+	print(sSQL)
+
+	# Run the insert and return the number of rows added
 	return execute(sSQL, dStruct.host)
