@@ -11,18 +11,22 @@
 import body, { errors } from '@ouroboros/body';
 import { Tree } from '@ouroboros/define';
 import { DefineNode } from '@ouroboros/define-mui';
+import RadioButtons from '@ouroboros/react-radiobuttons-mui'
 
 // NPM modules
 import React, { useEffect, useState } from 'react';
-import { Editor } from '@tinymce/tinymce-react';
+import { useNavigate } from 'react-router-dom';
 
 // Material UI
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
+import Switch from '@mui/material/Switch';
 
 // Project components
 import HTML from 'components/elements/HTML';
@@ -50,6 +54,9 @@ const CampaignTree = new Tree(CampaignDef, {
 export default function CampaignNew(props) {
 
 	// State
+	const [ categories, categoriesSet ] = useState([]);
+	const [ contacts, contactsSet ] = useState('all')
+	const [ contactsList, contactsListSet ] = useState([]);
 	const [ content, contentSet ] = useState('');
 	const [ errors, errorsSet ] = useState({});
 	const [ minMax, minMaxSet ] = useState([ 300, 600 ]);
@@ -59,6 +66,9 @@ export default function CampaignNew(props) {
 	const [ sender, senderSet ] = useState('-1');
 	const [ senders, sendersSet ] = useState([]);
 	const [ subject, subjectSet ] = useState('');
+
+	// Hooks
+	const navigate = useNavigate();
 
 	// Projects load effect
 	useEffect(() => {
@@ -70,12 +80,38 @@ export default function CampaignNew(props) {
 		if(project === '-1') {
 			sendersSet([]);
 		} else {
-			body.read('admin', 'senders', { _project: project }).then(
-				sendersSet, Message.error
-			);
+			body.read('admin', '__list', [
+				['senders', { _project: project }],
+				['categories', { _project: project }]
+			], ).then(data => {
+				if(data) {
+					sendersSet(data[0][1].data);
+					categoriesSet(data[1][1].data);
+				}
+			}, Message.error);
 		}
 
 	}, [ project ]);
+
+	// Called when any of the contact list options changes
+	function contactsListChange(_id, checked) {
+		contactsListSet(l => {
+			if(checked) {
+				if(!l.includes(_id)) {
+					const lNew = [ ...l ];
+					lNew.push(_id);
+					return lNew;
+				}
+			} else {
+				const i = l.indexOf(_id);
+				if(i > -1) {
+					const lNew = [ ...l ];
+					lNew.splice(i, 1);
+					return lNew;
+				}
+			}
+		});
+	}
 
 	// Called when either the min or max is changed
 	function minMaxChange(which, value) {
@@ -121,6 +157,37 @@ export default function CampaignNew(props) {
 	// Called when the create form is submitted
 	function submit(record) {
 
+		// Generate the data
+		const oData = {
+			record: {
+				_project: project,
+				_sender: sender,
+				name,
+				min_interval: minMax[0],
+				max_interval: minMax[1],
+				subject,
+				content
+			},
+			contacts
+		};
+
+		// If contacts is categories or ids
+		if(['categories', 'ids'].indexOf(contacts) > -1) {
+
+			// Add the list of IDs
+			oData.contacts_list = contactsList;
+		}
+
+		// Send the request
+		body.create('admin', 'campaign', oData).then(data => {
+
+			// Success
+			Message.success('New Campaign created');
+
+			// Navigate to the new campaign
+			navigate(`/campaigns/${data}`);
+
+		}, Message.error);
 	}
 
 	// Render
@@ -131,7 +198,7 @@ export default function CampaignNew(props) {
 			</Box>
 			<Grid container spacing={2} className="campaignForm">
 				<Grid item xs={12} md={6} className="field">
-					<FormControl error={errors._project && errors._project !== false} variant="outlined">
+					<FormControl error={errors.records && errors.records._project && errors.records._project !== false} variant="outlined">
 						<InputLabel id="campaignNewProject">Project</InputLabel>
 						<Select
 							label="Project"
@@ -145,14 +212,14 @@ export default function CampaignNew(props) {
 								<option key={o._id} value={o._id}>{o.name}</option>
 							)}
 						</Select>
-						{errors._project &&
-							<FormHelperText>{errors._project}</FormHelperText>
+						{errors.records && errors.records._project &&
+							<FormHelperText>{errors.record._project}</FormHelperText>
 						}
 					</FormControl>
 				</Grid>
 				{project !== '-1' && <>
 					<Grid item xs={12} md={6} className="field">
-						<FormControl error={errors._project && errors._project !== false} variant="outlined">
+						<FormControl error={errors.records && errors.records._sender && errors.records._sender !== false} variant="outlined">
 							<InputLabel id="campaignNewSender">Sender</InputLabel>
 							<Select
 								label="Sender"
@@ -166,14 +233,15 @@ export default function CampaignNew(props) {
 									<option key={o.email_address} value={o._id}>{o.email_address}</option>
 								)}
 							</Select>
-							{errors._sender &&
-								<FormHelperText>{errors._sender}</FormHelperText>
+							{errors.records && errors.records._sender &&
+								<FormHelperText>{errors.record._sender}</FormHelperText>
 							}
 						</FormControl>
 					</Grid>
 					{sender !== '-1' && <>
 						<Grid item xs={12} md={4} className="field">
 							<DefineNode
+								error={(errors.record && errors.record.name) || false}
 								name="name"
 								node={CampaignTree.get('name')}
 								onChange={nameSet}
@@ -183,6 +251,7 @@ export default function CampaignNew(props) {
 						</Grid>
 						<Grid item xs={12} md={4}>
 							<Minutes
+								error={(errors.record && errors.record.min_interval) || false}
 								label="Minimum Interval"
 								onChange={val => minMaxChange('min', val)}
 								value={minMax[0]}
@@ -190,6 +259,7 @@ export default function CampaignNew(props) {
 						</Grid>
 						<Grid item xs={12} md={4}>
 							<Minutes
+								error={(errors.record && errors.record.max_interval) || false}
 								label="Maxmimum Interval"
 								onChange={val => minMaxChange('max', val)}
 								value={minMax[1]}
@@ -197,6 +267,7 @@ export default function CampaignNew(props) {
 						</Grid>
 						<Grid item xs={12} className="field">
 							<DefineNode
+								error={(errors.record && errors.record.subject) || false}
 								name="subject"
 								node={CampaignTree.get('subject')}
 								onChange={subjectSet}
@@ -205,11 +276,60 @@ export default function CampaignNew(props) {
 							/>
 						</Grid>
 						<Grid item xs={12} className="field">
-							<span className="fakeMuiLabel">E-Mail Content Template</span>
-							<HTML
-								onChange={contentSet}
-								value={content}
+							<FormControl error={errors.records && errors.records.content && errors.records.content !== false} variant="outlined">
+								<InputLabel id="campaignNewContent" shrink={true}>E-Mail Content Template</InputLabel>
+								<HTML
+									labelId="campaignNewContent"
+									onChange={contentSet}
+									value={content}
+								/>
+								{errors.records && errors.records.content &&
+									<FormHelperText>{errors.record.content}</FormHelperText>
+								}
+							</FormControl>
+						</Grid>
+						<Grid item xs={12}>
+							<RadioButtons
+								border={true}
+								gridContainerProps={{ spacing: 2 }}
+								gridItemProps={{ xs: 4 }}
+								label="Choose Contacts"
+								options={[
+									{ text: 'All', value: 'all' },
+									{ text: 'Categories', value: 'categories' },
+									{ text: 'List', value: 'ids' }
+								]}
+								onChange={val => {
+									contactsSet(val);
+									contactsListSet([]);
+								}}
+								value={contacts}
+								variant="grid"
 							/>
+						</Grid>
+						{(contacts === 'categories' &&
+							categories.map(o =>
+								<Grid key={o._id} item xs={6} sm={4} md={3} lg={2}>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={contactsList.includes(o._id)}
+												onChange={ev => contactsListChange(o._id, ev.target.checked)}
+											/>}
+										label={o.name}
+									/>
+								</Grid>
+							)
+						) || (contacts === 'ids' &&
+
+							<Box />
+						)}
+						<Grid item xs={12} className="actions">
+							<Button
+								color="primary"
+								onClick={submit}
+								variant="contained"
+							>Create Campgin</Button>
 						</Grid>
 					</>}
 				</>}

@@ -75,7 +75,7 @@ class Admin(Service):
 		"""
 
 		# Check for fields we need to validate outside of the format
-		try: evaluate(req.data.record, [
+		try: evaluate(req.data, [
 			[ 'record', [
 				'_project', '_sender', 'min_interval', 'max_interval'
 			] ],
@@ -84,7 +84,7 @@ class Admin(Service):
 		except ValueError as e:
 			return Error(
 				errors.DATA_FIELDS,
-				[ [ 'record.%' % s, 'missing' ] for s in e.args ]
+				[ [ s, 'missing' ] for s in e.args ]
 			)
 
 		# Make sure the intervals are proper unsigned ints
@@ -229,10 +229,10 @@ class Admin(Service):
 		# Return the ID
 		return Response(sID)
 
-	def categories_read(self, req: jobject) -> Response:
-		"""Categories (read)
+	def campaign_read(self, req: jobject) -> Response:
+		"""Campaign (read)
 
-		Fetches and returns all existing categories in the system
+		Fetches an existing campaign and returns it
 
 		Arguments:
 			req (jobject): Contains data and session if available
@@ -241,8 +241,68 @@ class Admin(Service):
 			Services.Response
 		"""
 
-		# Get all the records
-		lCategories = category.Category.get(raw = True)
+		# If the ID is missing
+		if '_id' not in req.data:
+			return Error(errors.DATA_FIELDS, [ [ '_id', 'missing' ] ])
+
+		# Fetch the record
+		dCampaign = campaign.Campaign.get(req.data._id, raw = True)
+		if not dCampaign:
+			return Error(errors.DB_NO_RECORD, [ req.data._id, 'campaign' ])
+
+		# Fetch the list of contacts associated and add them to the record
+		dCampaign['contacts'] = campaign_contact.CampaignContact.filter({
+			'_campaign': req.data._id
+		}, raw = [ '_id', '_contact', 'sent', 'delivered', 'opened' ])
+
+		# If names are requested
+		if 'add_names' in req.data and req.data.add_names:
+
+			# Fetch the project name
+			dProject = project.Project.get(
+				dCampaign['_project'],
+				raw = [ 'name']
+			)
+
+			# Add one whether it exists or not
+			try: dCampaign['project_name'] = dProject['name']
+			except: dCampaign['project_name'] = 'PROJECT NOT FOUND'
+
+			# Fetch the contact names
+			dContacts = {
+				d['_id']: d['name'] for d in contact.Contact.get([
+					d2['_contact'] for d2 in dCampaign['contacts']
+				], raw = [ '_id', 'name' ])
+			}
+
+			# Go through each contact and add a name if it exists or not
+			for d in dCampaign['contacts']:
+				try: d['contact_name'] = dContacts[d['_contact']]
+				except: d['contact_name'] = 'CONTACT NOT FOUND'
+
+		# Return the record
+		return Response(dCampaign)
+
+	def categories_read(self, req: jobject) -> Response:
+		"""Categories (read)
+
+		Fetches and returns all existing categories in a project
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# If the project is not passed
+		if '_project' not in req.data:
+			return Error(errors.DATA_FIELDS, [ [ '_project', 'missing' ] ])
+
+		# Request the senders
+		lCategories = category.Category.filter({
+			'_project': req.data._project
+		}, raw = True)
 
 		# Sort them by name
 		lCategories.sort(key = itemgetter('name'))
@@ -460,6 +520,7 @@ class Admin(Service):
 
 		# Create and validate the record
 		try:
+			req.data.record.unsubscribed = False
 			sID = contact.Contact.add(
 				req.data.record,
 				revision_info = { 'user': REPLACE_ME }

@@ -14,9 +14,12 @@ __created__		= "2024-01-16"
 from config import config
 import jsonb
 from record_mysql import Storage
+from record_mysql.server import execute
 
 # Python imports
 from pathlib import Path
+from random import uniform
+from typing import List
 
 # Create the Storage instance
 Campaign = Storage(
@@ -35,8 +38,8 @@ Campaign = Storage(
 			'collate': 'utf8mb4_unicode_ci',
 			'create': [
 				'_created', '_updated', '_project', '_sender', 'name',
-				'next_trigger', 'minimum_interval', 'maximum_interval',
-				'subject', 'content'
+				'next_trigger', 'min_interval', 'max_interval',	'subject',
+				'content'
 			],
 			'db': config.mysql.db('contact'),
 			'indexes': {
@@ -56,3 +59,65 @@ Campaign = Storage(
 		} }
 	}
 )
+
+def pause(campaign_id: str) -> bool:
+	"""Pause
+
+	Pauses an existing campaign
+
+	Arguments:
+		campaign_id (str): The ID of the campaign to pause
+
+	Returns:
+		bool
+	"""
+
+	# Get the struct
+	dStruct = Campaign._parent._table._struct
+
+	# Generate the SQL
+	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \
+			" `next_trigger` = NULL\n" \
+			"WHERE `_id` = '%(_id)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'_id': campaign_id
+	}
+
+	print(sSQL)
+
+	# Run the statement
+	return execute(sSQL, dStruct.host) and True or False
+
+def set_next(campaign_id: str, minmax: List[int]) -> bool:
+	"""Pause
+
+	Pauses an existing campaign
+
+	Arguments:
+		campaign_id (str): The ID of the campaign to pause
+
+	Returns:
+		bool
+	"""
+
+	# Get the struct
+	dStruct = Campaign._parent._table._struct
+
+	# Get a random value between the min and max
+	iInterval = uniform(minmax[0], minmax[1])
+
+	# Generate the SQL
+	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \
+			" `next_trigger` = DATE_ADD(NOW(), INTERVAL %(interval)s second)\n" \
+			"WHERE `_id` = '%(_id)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'interval': str(iInterval),
+		'_id': campaign_id
+	}
+
+	print(sSQL)
+
+	# Run the statement
+	return execute(sSQL, dStruct.host) and True or False

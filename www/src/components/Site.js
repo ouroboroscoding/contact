@@ -40,6 +40,7 @@ import Testing from 'components/Testing';
 
 // Site pages
 import CampaignsExisting from 'components/pages/Campaigns/Existing';
+import CampaignsCampaign from 'components/pages/Campaigns/Campaign';
 import CampaignNew from 'components/pages/Campaigns/New';
 import Categories from 'components/pages/Categories';
 import Contacts from 'components/pages/Contacts';
@@ -77,8 +78,9 @@ export default function Site(props) {
 					<Box className="flexDynamic">
 						<Routes>
 							<Route path="/campaigns">
-								<Route index element={ <CampaignsExisting /> } />
 								<Route path="new" element={ <CampaignNew /> } />
+								<Route path=":_id" element={ <CampaignsCampaign /> } />
+								<Route index element={ <CampaignsExisting /> } />
 							</Route>
 							<Route path="/categories" element={ <Categories /> } />
 							<Route path="/contacts" element={ <Contacts /> } />

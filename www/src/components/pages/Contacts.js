@@ -24,42 +24,20 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 // Project modules
-import { addError } from 'components/Errors';
-import { showSuccess } from 'components/Success';
+import Message from 'message';
 
 // Definitions
 import ContactDef from 'definitions/admin/contact';
 import { arrayFindDelete, arrayFindMerge } from '@ouroboros/tools';
 
-// Generate the project options
-const ProjectOptions = new Options.Fetch(() => {
-	return new Promise((resolve, reject) => {
-		body.read('admin', 'projects').then(resolve, reject);
-	});
-});
-const CategoryOptions = () => {
-	return new Promise((resolve, reject) => {
-		body.read('admin', 'categories').then(data => {
-			const oCategories = {};
-			for(const o of data) {
-				if(o._project in oCategories) {
-					oCategories[o._project].push([ o._id, o.name ])
-				} else {
-					oCategories[o._project] = [ [ o._id, o.name ] ]
-				}
-			}
-			resolve(oCategories);
-
-		}, reject);
-	});
-}
+// Init category options
+const CategoryOptions = new Options.Custom();
 
 // Generate the Tree
 const ContactTree = new Tree(ContactDef, {
 	__ui__: {
 		__create__: [
-			'_project', 'email_address', 'name', 'alias', 'company',
-			'categories'
+			'email_address', 'name', 'alias', 'company', 'categories'
 		],
 		__update__: [
 			'email_address', 'name', 'alias', 'company', 'categories'
@@ -68,19 +46,19 @@ const ContactTree = new Tree(ContactDef, {
 	},
 
 	_updated: { __ui__: { __title__: 'Last Updated' } },
-	_project: { __ui__: {
-		'__options__': ProjectOptions,
-		'__title__': 'Project',
-		'__type__': 'select'
-	}},
 	email_address: { __ui__: { __title__: 'E-Mail Address' } },
 	name: { __ui__: { __title__: 'Full Name' } },
 
-	categories: { __ui__: {
-		__header__: 'Categories',
-		__title__: 'Category',
-		__type__: 'select'
-	} }
+	categories: {
+		__ui__: { __header__: 'Categories' },
+		__type__: {
+			__ui__: {
+				__title__: 'Category',
+				__type__: 'select',
+				__options__: CategoryOptions
+			}
+		}
+	}
 });
 
 // Constants
@@ -114,25 +92,34 @@ export default function Contacts(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		const oP = ProjectOptions.subscribe(projectsSet);
-		return () => oP.unsubscribe()
+		body.read('admin', 'projects').then(
+			data => projectsSet(data.map(o => [ o._id, o.name ])),
+			Message.error
+		);
 	}, []);
 
 	// Project effect
 	useEffect(() => {
 		if(project === '') {
+			createSet(false);
 			resultsSet(false);
+			CategoryOptions.set([]);
 		} else {
-			body.read('admin', 'contacts', {
-				'_project': project
-			}).then(resultsSet, error => {
-				addError(error);
-			});
+			body.read('admin', '__list', [
+				[ 'contacts', { '_project': project } ],
+				[ 'categories', { '_project': project } ]
+			]).then(data => {
+				resultsSet(data[0][1].data);
+				CategoryOptions.set(data[1][1].data.map(o => [ o._id, o.name ]))
+			}, Message.error);
 		}
 	}, [ project ]);
 
 	// Called when the create form is submitted
 	function createSubmit(record) {
+
+		// Add the current project to the record
+		record._project = project;
 
 		// Create a new Promise and return it
 		return new Promise((resolve, reject) => {
@@ -144,7 +131,14 @@ export default function Contacts(props) {
 				createSet(false);
 
 				// Notify the user
-				showSuccess('Contact created. Refreshing contact list.');
+				Message.success('Contact created. Refreshing contact list.');
+
+				// Fetch the latest results
+				body.read('admin', 'contacts', {
+					'_project': project
+				}).then(resultsSet, error => {
+					Message.error(error);
+				});
 
 				// Resolve ok
 				resolve(true);
@@ -153,7 +147,7 @@ export default function Contacts(props) {
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
-					addError(error);
+					Message.error(error);
 				}
 			});
 		});
@@ -167,14 +161,12 @@ export default function Contacts(props) {
 			if(data) {
 
 				// Notify the user
-				showSuccess('Contact deleted. Refreshing contact list.');
+				Message.success('Contact deleted. Refreshing contact list.');
 
 				// Find the record and remove it
 				resultsSet(l => arrayFindDelete(l, '_id', key, true));
 			}
-		}, error => {
-			addError(error);
-		});
+		}, Message.error);
 	}
 
 	// Called when a result form is submitted
@@ -190,10 +182,14 @@ export default function Contacts(props) {
 			}).then(data => {
 
 				// Notify the user
-				showSuccess('Contact updated. Refreshing contact list.');
+				Message.success('Contact updated. Refreshing contact list.');
 
-				// Find the record and update it
-				resultsSet(l => arrayFindMerge(l, '_id', key, record, true));
+				// Fetch the latest results
+				body.read('admin', 'contacts', {
+					'_project': project
+				}).then(resultsSet, error => {
+					Message.error(error);
+				});
 
 				// Resolve ok
 				resolve(true);
@@ -203,7 +199,7 @@ export default function Contacts(props) {
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
-					addError(error);
+					Message.error(error);
 				}
 			});
 		});
@@ -234,11 +230,6 @@ export default function Contacts(props) {
 			{create &&
 				<Paper>
 					<Form
-						dynamicOptions={[{
-							node: 'categories',
-							trigger: '_project',
-							options: CategoryOptions
-						}]}
 						gridSizes={GRID_SIZES}
 						onCancel={() => createSet(false)}
 						onSubmit={createSubmit}
@@ -254,11 +245,6 @@ export default function Contacts(props) {
 			) ||
 				<Results
 					data={results}
-					dynamicOptions={[{
-						node: 'categories',
-						trigger: '_project',
-						options: CategoryOptions
-					}]}
 					gridSizes={GRID_SIZES}
 					onDelete={resultRemove}
 					onUpdate={updateSubmit}

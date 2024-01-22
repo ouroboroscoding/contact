@@ -22,20 +22,6 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 /**
- * Add Error
- *
- * Adds an error to the list below the others
- *
- * @name addError
- * @access public
- * @param {mixed} error The error to add, can be a string or an object
- * @returns void
- */
-export function addError(error) {
-	events.get('error').trigger(error);
-}
-
-/**
  * Errors
  *
  * Displays the list of current errors

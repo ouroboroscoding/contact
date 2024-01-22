@@ -18,7 +18,7 @@ from record_mysql.server import execute, select, Select
 
 # Python imports
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Literal
 
 # Other records
 from records.admin.contact import Contact
@@ -75,7 +75,7 @@ def unsent_by_campaigns(campaign_ids: List[str]) -> Dict[str, int]:
 			"FROM `%(db)s`.`%(table)s`\n" \
 			"WHERE `_campaign` in ('%(campaigns)s')" % {
 		'db': dStruct.db,
-		'table': dStruct.table,
+		'table': dStruct.name,
 		'campaigns': '\',\''.join(campaign_ids)
 	}
 
@@ -115,10 +115,10 @@ def add_contacts_all(campaign_id: str, project_id: str) -> None:
 			"FROM `%(cdb)s`.`%(ctable)s`\n" \
 			"WHERE `_project` = '%(project)s'" % {
 		'db': dStruct.db,
-		'table': dStruct.table,
+		'table': dStruct.name,
 		'campaign': campaign_id,
 		'cdb': dContact.db,
-		'ctable': dContact.table,
+		'ctable': dContact.name,
 		'project': project_id
 	}
 
@@ -155,10 +155,10 @@ def add_contacts_by_categories(
 			"FROM `%(cdb)s`.`%(ctable)s`\n" \
 			"WHERE `_value` IN ('%(categories)s')" % {
 		'db': dStruct.db,
-		'table': dStruct.table,
+		'table': dStruct.name,
 		'campaign': campaign_id,
 		'cdb': dCategories.db,
-		'ctable': dCategories.table,
+		'ctable': dCategories.name,
 		'categories': '\',\''.join(category_ids)
 	}
 
@@ -191,7 +191,7 @@ def add_contacts_list(campaign_id: str, contact_ids: List[str]) -> None:
 			" (`_id`, `_campaign`, `_contact`)\n" \
 			"VALUES %(rows)s" % {
 		'db': dStruct.db,
-		'table': dStruct.table,
+		'table': dStruct.name,
 		'rows': ',\n'.join([ sValues % s for s in contact_ids ])
 	}
 
@@ -199,3 +199,34 @@ def add_contacts_list(campaign_id: str, contact_ids: List[str]) -> None:
 
 	# Run the insert and return the number of rows added
 	return execute(sSQL, dStruct.host)
+
+def next(campaign_id: str) -> dict | Literal[False]:
+	"""Next
+
+	Returns the next contact in the campaign that can be delivered
+
+	Arguments:
+		campaign_id (str): The ID of the campaign
+
+	Returns:
+		dict
+	"""
+
+	# Get the struct
+	dStruct = CampaignContact._parent._table._struct
+
+	# Generate the SQL
+	sSQL = "SELECT `_id`, `_contact`\n" \
+		 	"FROM `%(db)s`.`%(table)s`\n" \
+			"WHERE `_campaign` = '%(campaign)s'\n" \
+			"AND `sent` = 0\n" \
+			"LIMIT 1" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'campaign': campaign_id
+	}
+
+	print(sSQL)
+
+	# Select the statement and return the result
+	return select(sSQL, Select.ROW, host = dStruct.host)

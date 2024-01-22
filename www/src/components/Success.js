@@ -20,20 +20,6 @@ import Snackbar from '@mui/material/Snackbar';
 import Typography from '@mui/material/Typography';
 
 /**
- * Show Success
- *
- * Shows a new success message, overwriting the previous if it's still open
- *
- * @name showSuccess
- * @access public
- * @param {string} text The text message to display
- * @returns void
- */
-export function showSuccess(text) {
-	events.get('success').trigger(text);
-}
-
-/**
  * Success
  *
  * Handles the snackbar

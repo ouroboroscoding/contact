@@ -6,11 +6,13 @@
 	},
 
 	"_created": {
-		"__type__": "timestamp"
+		"__type__": "timestamp",
+		"__optional__": true
 	},
 
 	"_updated": {
-		"__type__": "timestamp"
+		"__type__": "timestamp",
+		"__optional__": true
 	},
 
 	"_project": {

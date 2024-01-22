@@ -23,8 +23,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 // Project modules
-import { addError } from 'components/Errors';
-import { showSuccess } from 'components/Success';
+import Message from 'message';
 
 // Definitions
 import ProjectDef from 'definitions/admin/project';
@@ -96,7 +95,7 @@ export default function Projects(props) {
 				createSet(false);
 
 				// Notify the user
-				showSuccess('Project created. Refreshing project list.');
+				Message.success('Project created. Refreshing project list.');
 
 				// Fetch the latest results
 				body.read('admin', 'projects').then(resultsSet);
@@ -109,7 +108,7 @@ export default function Projects(props) {
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
-					addError(error);
+					Message.error(error);
 				}
 			});
 		});
@@ -123,13 +122,13 @@ export default function Projects(props) {
 			if(data) {
 
 				// Notify the user
-				showSuccess('Project deleted. Refreshing project list.');
+				Message.success('Project deleted. Refreshing project list.');
 
 				// Fetch the latest results
 				body.read('admin', 'projects').then(resultsSet);
 			}
 		}, error => {
-			addError(error);
+			Message.error(error);
 		});
 	}
 
@@ -146,7 +145,7 @@ export default function Projects(props) {
 			}).then(data => {
 
 				// Notify the user
-				showSuccess('Project updated. Refreshing project list.');
+				Message.success('Project updated. Refreshing project list.');
 
 				// Fetch the latest results
 				body.read('admin', 'projects').then(resultsSet);
@@ -159,7 +158,7 @@ export default function Projects(props) {
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
-					addError(error);
+					Message.error(error);
 				}
 			});
 		});

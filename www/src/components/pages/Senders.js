@@ -24,8 +24,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 // Project modules
-import { addError } from 'components/Errors';
-import { showSuccess } from 'components/Success';
+import Message from 'message';
 import { SENDER_BEING_USED } from 'errors';
 
 // Definitions
@@ -89,7 +88,7 @@ export default function Senders(props) {
 			body.read('admin', 'senders', {
 				'_project': project
 			}).then(resultsSet, error => {
-				addError(error);
+				Message.error(error);
 			});
 		}
 	}, [ project ]);
@@ -110,12 +109,14 @@ export default function Senders(props) {
 				createSet(false);
 
 				// Notify the user
-				showSuccess('Sender created. Refreshing sender list.');
+				Message.success('Sender created. Refreshing sender list.');
 
 				// Fetch the latest results
 				body.read('admin', 'senders', {
 					_project: project
-				}).then(resultsSet);
+				}).then(resultsSet, error => {
+					Message.error(error);
+				});
 
 				// Resolve ok
 				resolve(true);
@@ -125,7 +126,7 @@ export default function Senders(props) {
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
-					addError(error);
+					Message.error(error);
 				}
 			});
 		});
@@ -139,7 +140,7 @@ export default function Senders(props) {
 			createSet(false);
 		} else {
 			if(project === '') {
-				showSuccess('Please select a Project first');
+				Message.success('Please select a Project first');
 			} else {
 				createSet(true);
 			}
@@ -154,19 +155,21 @@ export default function Senders(props) {
 			if(data) {
 
 				// Notify the user
-				showSuccess('Sender deleted. Refreshing sender list.');
+				Message.success('Sender deleted. Refreshing sender list.');
 
 				// Fetch the latest results
 				body.read('admin', 'senders', {
 					_project: project
-				}).then(resultsSet);
+				}).then(resultsSet, error => {
+					Message.error(error);
+				});
 			}
 		}, error => {
 			if(error.code === SENDER_BEING_USED) {
-				addError('Sender is still being used by active campaigns: ' +
+				Message.error('Sender is still being used by active campaigns: ' +
 						JSON.stringify(error.msg, null, 4));
 			} else {
-				addError(error);
+				Message.error(error);
 			}
 		});
 	}
@@ -184,12 +187,14 @@ export default function Senders(props) {
 			}).then(data => {
 
 				// Notify the user
-				showSuccess('Sender updated. Refreshing sender list.');
+				Message.success('Sender updated. Refreshing sender list.');
 
 				// Fetch the latest results
 				body.read('admin', 'senders', {
 					_project: project
-				}).then(resultsSet);
+				}).then(resultsSet, error => {
+					Message.error(error);
+				});
 
 				// Resolve ok
 				resolve(true);
@@ -198,7 +203,7 @@ export default function Senders(props) {
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
-					addError(error);
+					Message.error(error);
 				}
 			});
 		});

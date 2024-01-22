@@ -3,6 +3,11 @@
 	padding-bottom: 0;
 }
 
+.MuiInputLabel-shrink {
+	background-color: $cWhite;
+	z-index: 10;
+}
+
 .MuiList-root {
 	background-color: $cWhite;
 	color: $cGrey;

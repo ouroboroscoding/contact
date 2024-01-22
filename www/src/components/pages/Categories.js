@@ -10,7 +10,7 @@
 // Ouroboros modules
 import body, { errors } from '@ouroboros/body';
 import { Tree } from '@ouroboros/define';
-import { Form, Options, Results } from '@ouroboros/define-mui';
+import { Form, Results } from '@ouroboros/define-mui';
 
 // NPM modules
 import React, { useEffect, useState } from 'react';
@@ -19,39 +19,25 @@ import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
+import Select from '@mui/material/Select';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 // Project modules
-import { addError } from 'components/Errors';
-import { showSuccess } from 'components/Success';
+import Message from 'message';
 
 // Definitions
 import CategoryDef from 'definitions/admin/category';
 
-// Generate the project options
-const ProjectOptions = new Options.Fetch(() => {
-	return new Promise((resolve, reject) => {
-		body.read('admin', 'projects').then(resolve, error => {
-			addError(error);
-		});
-	});
-});
-
 // Generate the Tree
 const CategoryTree = new Tree(CategoryDef, {
 	__ui__: {
-		__create__: [ '_project', 'name' ],
+		__create__: [ 'name' ],
 		__update__: [ 'name' ],
 		__results__: [ '_created', '_updated', '_project', 'name' ]
 	},
 
 	_updated: { __ui__: { __title__: 'Last Updated' } },
-	_project: { __ui__: {
-		__options__: ProjectOptions,
-		__title__: 'Project',
-		__type__: 'select'
-	}},
 	name: { __ui__: { __title__: 'Category Name' } }
 });
 
@@ -74,18 +60,34 @@ export default function Categories(props) {
 
 	// State
 	const [ create, createSet ] = useState(false);
+	const [ project, projectSet ] = useState('');
+	const [ projects, projectsSet ] = useState([]);
 	const [ results, resultsSet ] = useState(false);
 
-	// Load effect
+	// Projects load effect
 	useEffect(() => {
-
-		// Fetch the categories from the server
-		body.read('admin', 'categories').then(resultsSet);
-
+		body.read('admin', 'projects').then(projectsSet)
 	}, []);
+
+	// Project effect
+	useEffect(() => {
+		if(project === '') {
+			createSet(false);
+			resultsSet(false);
+		} else {
+			body.read('admin', 'categories', {
+				'_project': project
+			}).then(resultsSet, error => {
+				Message.error(error);
+			});
+		}
+	}, [ project ]);
 
 	// Called when the create form is submitted
 	function createSubmit(record) {
+
+		// Add the current project to the record
+		record._project = project;
 
 		// Create a new Promise and return it
 		return new Promise((resolve, reject) => {
@@ -97,10 +99,14 @@ export default function Categories(props) {
 				createSet(false);
 
 				// Notify the user
-				showSuccess('Category created. Refreshing category list.');
+				Message.success('Category created. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'categories').then(resultsSet);
+				body.read('admin', 'categories', {
+					'_project': project
+				}).then(resultsSet, error => {
+					Message.error(error);
+				});
 
 				// Resolve ok
 				resolve(true);
@@ -110,10 +116,25 @@ export default function Categories(props) {
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
-					addError(error);
+					Message.error(error);
 				}
 			});
 		});
+	}
+
+	// Calle when create button clicked
+	function createToggle() {
+
+		// If we're already enabled
+		if(create) {
+			createSet(false);
+		} else {
+			if(project === '') {
+				Message.success('Please select a Project first');
+			} else {
+				createSet(true);
+			}
+		}
 	}
 
 	// Called to delete a category
@@ -124,13 +145,17 @@ export default function Categories(props) {
 			if(data) {
 
 				// Notify the user
-				showSuccess('Category deleted. Refreshing category list.');
+				Message.success('Category deleted. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'categories').then(resultsSet);
+				body.read('admin', 'categories', {
+					'_project': project
+				}).then(resultsSet, error => {
+					Message.error(error);
+				});
 			}
 		}, error => {
-			addError(error);
+			Message.error(error);
 		});
 	}
 
@@ -147,10 +172,14 @@ export default function Categories(props) {
 			}).then(data => {
 
 				// Notify the user
-				showSuccess('Category updated. Refreshing category list.');
+				Message.success('Category updated. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'categories').then(resultsSet);
+				body.read('admin', 'categories', {
+					'_project': project
+				}).then(resultsSet, error => {
+					Message.error(error);
+				});
 
 				// Resolve ok
 				resolve(true);
@@ -160,7 +189,7 @@ export default function Categories(props) {
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
-					addError(error);
+					Message.error(error);
 				}
 			});
 		});
@@ -171,8 +200,19 @@ export default function Categories(props) {
 		<Box id="categories" className="flexDynamic padding">
 			<Box className="pageHeader flexColumns">
 				<h1 className="flexDynamic">Categories</h1>
-				<Tooltip className="flexStatic" title="Create new Category">
-					<IconButton onClick={() => createSet(b => !b)} className={create ? 'open' : null}>
+				<Select
+					native
+					size="small"
+					onChange={ev => projectSet(ev.target.value)}
+					value={project}
+				>
+					<option value="">Select Project...</option>
+					{projects.map(o =>
+						<option value={o._id}>{o.name}</option>
+					)}
+				</Select>
+				<Tooltip className="flexStatic" title={project !== '' ? 'Create new Category' : 'Select a Project'}>
+					<IconButton onClick={createToggle} className={create ? 'open' : null}>
 						<i className="fa-solid fa-circle-plus" />
 					</IconButton>
 				</Tooltip>
@@ -189,7 +229,7 @@ export default function Categories(props) {
 				</Paper>
 			}
 			{(results === false &&
-				<Typography>Loading...</Typography>
+				<Typography>Please select a project</Typography>
 			) || (results.length === 0 &&
 				<Typography>No Categories found.</Typography>
 			) ||

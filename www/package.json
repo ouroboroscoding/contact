@@ -13,6 +13,7 @@
     "@ouroboros/define": "^1.0.3",
     "@ouroboros/define-mui": "file:../../@ouroboros/define-mui",
     "@ouroboros/events": "^1.0.0",
+    "@ouroboros/react-radiobuttons-mui": "^1.0.1",
     "@ouroboros/tools": "^0.5.3",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.4",
