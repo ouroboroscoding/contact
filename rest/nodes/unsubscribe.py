@@ -20,7 +20,7 @@ import bottle
 from jinja2 import FileSystemLoader, Environment, select_autoescape
 
 # Record imports
-from records.admin import contact, project, unsubscribe
+from records.admin import campaign_contact, contact, project
 
 # Templates
 tpl = {
@@ -50,9 +50,9 @@ class Unsubscribe(bottle.Bottle):
 		super(Unsubscribe, self).__init__()
 
 		# Add the routes
-		self.route('/<short_code:re:[A-Z]{3,4}>/<email_address>', 'GET', getattr(self, 'index_get'))
-		self.route('/<short_code:re:[A-Z]{3,4}>/<email_address>', 'POST', getattr(self, 'index_post'))
-		self.route('/oneclick/<id>', 'GET', getattr(self, 'one_click'))
+		self.route('/<_id>', 'GET', getattr(self, 'index_get'))
+		self.route('/<_id>', 'POST', getattr(self, 'index_post'))
+		self.route('/oneclick/<_id>', 'GET', getattr(self, 'one_click'))
 
 		# Init Jinja and load templates
 		jinja = Environment(
@@ -65,13 +65,13 @@ class Unsubscribe(bottle.Bottle):
 		self._index = jinja.get_template('index.html.jinja')
 		self._response = jinja.get_template('response.html.jinja')
 
-	def index_get(self, short_code: str, email_address: str):
+	def index_get(self, _id: str):
 		"""Index (GET)
 
 		Asks the user to confirm unsubscribing from the project
 
 		Arguments:
-			short_code (str): The short code for the project
+			_id (str): The ID of the contact in the campaign
 			email_address (str): The email address the user wants to unsubscribe
 
 		Returns:
@@ -82,28 +82,29 @@ class Unsubscribe(bottle.Bottle):
 		bottle.response.headers['Content-Type'] = \
 				'text/html; charset=utf-8'
 
-		# Find the project by short code
-		dProject = project.Project.get(
-			short_code,
-			index = 'ui_short_code',
-			raw = [ 'name' ]
-		)
+		# Find the campaign contact with the contact info
+		dContact = campaign_contact.get_with_contact(_id)
 
-		# If the project doesn't exist
+		# If there's no such campaign contact, just return
+		if not dContact or dContact['unsubscribed']:
+			return self._response.render(error = 'no_contact')
+
+		# Find the project and set the name
+		dProject = project.Project.get(dContact['_project'], raw = [ 'name' ])
 		if not dProject:
 			return self._index.render(error = 'no_project')
 
-		# Rendeer the template
+		# Render the template
 		sHTML = self._index.render(info = {
 			'project_name': dProject['name'],
-			'email_address': email_address
+			'email_address': dContact['email_address']
 		})
 
 		# Set content length and return response
 		bottle.response.headers['Content-Length'] = len(sHTML)
 		return bottle.Response(sHTML, 200)
 
-	def index_post(self, short_code: str, email_address: str):
+	def index_post(self, _id: str) -> str:
 		"""Index (POST)
 
 		Handles the confirmation of unsubscribe
@@ -116,77 +117,17 @@ class Unsubscribe(bottle.Bottle):
 			Response
 		"""
 
-		# Set the return to HTML
-		bottle.response.headers['Content-Type'] = \
-				'text/html; charset=utf-8'
+		# Call the one click method and return the result
+		return self.one_click(_id)
 
-		# Find the project by short code
-		dProject = project.Project.get(
-			short_code,
-			index = 'ui_short_code',
-			raw = [ '_id', 'name' ]
-		)
-
-		# If the project doesn't exist
-		if not dProject:
-			return self._response.render(error = 'no_project')
-
-		# Store the project name
-		sProjectName = dProject['name']
-
-		# Find the contact by project and email
-		oContact = contact.Contact.get((
-			dProject['_id'], email_address
-		), index = 'ui_project_email')
-
-		# If there's no such contact
-		if not oContact:
-			return self._response.render(error = 'no_contact')
-
-		# Add the contact to the unsubscribed list using the same project and
-		#	email address
-		try:
-			unsubscribe.Unsubscribe.add({
-				'_project': dProject['_id'],
-				'email_address': email_address
-			}, revision_info = { 'user': 'oneclick' })
-
-		# If there was a failure
-		except RecordServerException:
-			return self._response.render(
-				error = 'unsubscribe',
-				email_address = email_address
-			)
-
-		# If the email is already unsubscribed, do nothing
-		except RecordDuplicate:
-			pass
-
-		# Mark the contact as unsubscribed so it can't be used anymore
-		try:
-			oContact['unsubscribed'] = True
-			oContact.save(revision_info = { 'user': 'unsubscribe_confirm' })
-		except Exception:
-			pass
-
-		# Generate the HTML
-		sHTML = self._response.render(
-			email_address = email_address,
-			project_name = sProjectName
-		)
-
-		# Set content length and return response
-		bottle.response.headers['Content-Length'] = len(sHTML)
-		return bottle.Response(sHTML, 200)
-
-	def one_click(self, id: str):
+	def one_click(self, _id: str):
 		"""One Click
 
 		Passed in the header of emails in order to allow users to instantly \
 		unsubscribe from the system
 
 		Arguments:
-			id (str): The unique ID of the user wishing to unsubscribe
+			_id (str): The unique ID of the contact in the campaign
 
 		Returns:
 			Response
@@ -196,50 +137,28 @@ class Unsubscribe(bottle.Bottle):
 		bottle.response.headers['Content-Type'] = \
 				'text/html; charset=utf-8'
 
-		# Find the contact
-		oContact = contact.Contact.get(id)
+		# Find the campaign contact with the contact info
+		dContact = campaign_contact.get_with_contact(_id)
 
-		# If there's no such contact, just return
-		if not oContact:
+		# If there's no such campaign contact, just return
+		if not dContact:
 			return self._response.render(error = 'no_contact')
 
-		# Set the project ID and email
-		sProjectID = oContact['_project']
-		sEmailAddress = oContact['email_address']
+		# If the contact is already unsubscribed
+		if dContact['unsubscribed']:
+			return self._response.render(error = 'no_contact')
 
-		# Add the contact to the unsubscribed list using the same project and
-		#	email address
-		try:
-			unsubscribe.Unsubscribe.add({
-				'_project': sProjectID,
-				'email_address': sEmailAddress
-			}, revision_info = { 'user': 'oneclick' })
-
-		# If there was a failure
-		except RecordServerException:
-			return self._response.render(
-				error = 'unsubscribe',
-				email_address = sEmailAddress
-			)
-
-		# If the email is already unsubscribed, do nothing
-		except RecordDuplicate:
-			pass
-
-		# Mark the contact as unsubscribed so it can't be used anymore
-		try:
-			oContact['unsubscribed'] = True
-			oContact.save(revision_info = { 'user': 'unsubscribe_confirm' })
-		except Exception:
-			pass
+		# Mark the contact as unsubscribed
+		if not campaign_contact.unsubscribe(_id, dContact['_contact']):
+			return self._response.render(error = 'unsubscribe')
 
 		# Find the project and set the name
-		dProject = project.Project.get(sProjectID, raw = [ 'name' ])
+		dProject = project.Project.get(dContact['_project'], raw = [ 'name' ])
 		sProjectName = dProject and dProject['name'] or 'PROJECT NOT FOUND'
 
 		# Generate HTML
 		sHTML = self._response.render(
-			email_address = sEmailAddress,
+			email_address = dContact['email_address'],
 			project_name = sProjectName
 		)
 

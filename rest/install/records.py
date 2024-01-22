@@ -17,7 +17,7 @@ import record_redis
 
 # Records
 from records.admin import \
-	campaign, campaign_contact, category, contact, project, sender, unsubscribe
+	campaign, campaign_contact, category, contact, project, sender
 
 # Only run if called directly
 if __name__ == '__main__':
@@ -43,4 +43,3 @@ if __name__ == '__main__':
 	contact.Contact.install()
 	project.Project.install()
 	sender.Sender.install()
-	unsubscribe.Unsubscribe.install()

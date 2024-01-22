@@ -14,14 +14,15 @@ __created__		= "2024-01-16"
 from config import config
 import jsonb
 from record_mysql import Storage
-from record_mysql.server import execute, select, Select
+from record_mysql.server import escape, execute, select, Select
+import undefined
 
 # Python imports
 from pathlib import Path
 from typing import Dict, List, Literal
 
 # Other records
-from records.admin.contact import Contact
+from records.admin import contact, project
 
 # Create the Storage instance
 CampaignContact = Storage(
@@ -39,7 +40,8 @@ CampaignContact = Storage(
 			'charset': 'utf8mb4',
 			'collate': 'utf8mb4_bin',
 			'create': [
-				'_campaign', '_contact', 'sent', 'delivered', 'opened'
+				'_campaign', '_contact', 'sent', 'delivered', 'opened',
+				'unsubscribed'
 			],
 			'db': config.mysql.db('contact'),
 			'indexes': {
@@ -106,14 +108,15 @@ def add_contacts_all(campaign_id: str, project_id: str) -> None:
 	dStruct = CampaignContact._parent._table._struct
 
 	# Get the contact struct
-	dContact = Contact._parent._table._struct
+	dContact = contact.Contact._parent._table._struct
 
 	# Generate the SQL
 	sSQL = "INSERT IGNORE INTO `%(db)s`.`%(table)s`" \
 			" (`_id`, `_campaign`, `_contact`)\n" \
 			"SELECT UUID(), '%(campaign)s', `_id`\n" \
 			"FROM `%(cdb)s`.`%(ctable)s`\n" \
-			"WHERE `_project` = '%(project)s'" % {
+			"WHERE `_project` = '%(project)s'\n" \
+			"AND `unsubscribed` = 0" % {
 		'db': dStruct.db,
 		'table': dStruct.name,
 		'campaign': campaign_id,
@@ -145,20 +148,26 @@ def add_contacts_by_categories(
 	# Get the struct
 	dStruct = CampaignContact._parent._table._struct
 
-	# Get the contact categories struct
-	dCategories = Contact._parent._complex['categories']._table._struct
+	# Get the contact structs
+	dContact = contact.Contact._parent._table._struct
+	dCategories = contact.Contact._parent._complex['categories']._table._struct
 
 	# Generate the SQL
 	sSQL = "INSERT IGNORE INTO `%(db)s`.`%(table)s`" \
 			" (`_id`, `_campaign`, `_contact`)\n" \
-			"SELECT DISTINCT UUID(), '%(campaign)s', `_parent`\n" \
-			"FROM `%(cdb)s`.`%(ctable)s`\n" \
-			"WHERE `_value` IN ('%(categories)s')" % {
+			"SELECT DISTINCT UUID(), '%(campaign)s', `co`.`_id`\n" \
+			"FROM `%(contact_db)s`.`%(contact_table)s` as `co`\n" \
+			"JOIN `%(categories_db)s`.`%(categories_table)s` as `ca`" \
+			" ON `co`.`_id` = `ca`.`_parent`\n" \
+			"WHERE `co`.`unsubscribed` = 0\n" \
+			"AND `ca`.`_value` IN ('%(categories)s')" % {
 		'db': dStruct.db,
 		'table': dStruct.name,
 		'campaign': campaign_id,
-		'cdb': dCategories.db,
-		'ctable': dCategories.name,
+		'contact_db': dContact.db,
+		'contact_table': dContact.name,
+		'categories_db': dCategories.db,
+		'categories_table': dCategories.name,
 		'categories': '\',\''.join(category_ids)
 	}
 
@@ -200,6 +209,41 @@ def add_contacts_list(campaign_id: str, contact_ids: List[str]) -> None:
 	# Run the insert and return the number of rows added
 	return execute(sSQL, dStruct.host)
 
+def get_with_contact(_id: str) -> dict | None:
+	"""Get with Contact
+
+	Fetches the contact info
+
+	Arguments:
+		_id (str): The unique ID of the contact in the campaign
+
+	Returns:
+		dict | None
+	"""
+
+	# Get the structs
+	dStruct = CampaignContact._parent._table._struct
+	dContact = contact.Contact._parent._table._struct
+
+	# Generate the SQL
+	sSQL = "SELECT `cc`.`_contact`, `cc`.`unsubscribed`,\n" \
+			"  `c`.`_project`, `c`.`email_address`\n" \
+			"FROM `%(db)s`.`%(table)s` as `cc`\n" \
+			"LEFT OUTER JOIN `%(contact_db)s`.`%(contact_table)s` as `c`" \
+			" ON `cc`.`_contact` = `c`.`_id`\n" \
+			"WHERE `cc`.`_id` = '%(_id)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'contact_db': dContact.db,
+		'contact_table': dContact.name,
+		'_id': escape(_id, host = dStruct.host)
+	}
+
+	print(sSQL)
+
+	# Run the statement return the row
+	return select(sSQL, Select.ROW, host = dStruct.host)
+
 def next(campaign_id: str) -> dict | Literal[False]:
 	"""Next
 
@@ -230,3 +274,40 @@ def next(campaign_id: str) -> dict | Literal[False]:
 
 	# Select the statement and return the result
 	return select(sSQL, Select.ROW, host = dStruct.host)
+
+def unsubscribe(_id: str, contact_id: str = undefined) -> bool:
+	"""Unsubscribe
+
+	Handles marking the user as unsubscribing from the specific campaign as \
+	well as any future campaigns for the project
+
+	Arguments:
+		_id (str): The campaign contact ID
+
+	Returns:
+		bool
+	"""
+
+	# Get the structs
+	dStruct = CampaignContact._parent._table._struct
+
+	# Generate the SQL to mark it as such
+	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \
+			" `unsubscribed` = NOW()\n" \
+			"WHERE `_id` = '%(_id)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'_id': escape(_id, host = dStruct.host)
+	}
+
+	# If we have didn't get a contact ID
+	if contact_id is undefined or contact_id is None:
+
+		# Run the SQL and return the result
+		return execute(sSQL, host = dStruct.host) and True or False
+
+	# Generate the contact unsubscribe SQL and make a list of the two
+	lSQL = [ sSQL, contact.unsubscribe(contact_id, return_sql = True) ]
+
+	# Execute the statements and return the result
+	return execute(lSQL, host = dStruct.host) and True or False

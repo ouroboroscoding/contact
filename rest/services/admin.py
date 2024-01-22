@@ -22,8 +22,7 @@ from operator import itemgetter
 
 # Import records
 from records.admin import \
-	campaign, campaign_contact, category, contact, project, sender, \
-	unsubscribe
+	campaign, campaign_contact, category, contact, project, sender
 
 # Import errors
 from shared.errors import \
@@ -382,7 +381,7 @@ class Admin(Service):
 		if lContacts:
 			return Error(
 				errors.DB_REFERENCES,
-				[ req.data.category, 'category', 'in contacts' ]
+				[ req.data.category, 'category', 'contact' ]
 			)
 
 		# Delete the record
@@ -552,6 +551,15 @@ class Admin(Service):
 		# If the contact doesn't exist
 		if not contact.Contact.exists(req.data._id):
 			return Error(errors.DB_NO_RECORD, [ req.data._id, 'contact' ])
+
+		# If the contact has been used
+		if campaign_contact.CampaignContact.filter({
+			'_contact': req.data._id
+		}, raw = [ '_id' ]):
+			return Error(
+				errors.DB_REFERENCES,
+				[ req.data._id, 'contact', 'campaign_contact' ]
+			)
 
 		# Delete the record
 		dRes = contact.Contact.remove(

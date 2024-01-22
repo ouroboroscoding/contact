@@ -14,6 +14,7 @@ __created__		= "2024-01-11"
 from config import config
 import jsonb
 from record_mysql import Storage
+from record_mysql.server import escape, execute
 
 # Python imports
 from pathlib import Path
@@ -75,3 +76,40 @@ Contact = Storage(
 		}
 	}
 )
+
+def unsubscribe(_id: str, return_sql: bool = False) -> bool | str:
+	"""Unsubscribe
+
+	Marks the given contact as unsubscribed so it can't be used again. If the \
+	return_sql flag is set to True, returns the SQL so it can be run with \
+	other statements instead of running it directly
+
+	Arguments:
+		_id (str): The unique ID of the contact
+		return_sql (bool): Optional, if set to true, returns the generated \
+			sql instead of running it
+
+	Returns:
+		boolean if statement is run, else returns the statement itself
+	"""
+
+	# Get the struct
+	dStruct = Contact._parent._table._struct
+
+	# Generate the SQL
+	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \
+			" `unsubscribed` = 1\n" \
+			"WHERE `_id` = '%(_id)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'_id': escape(_id, host = dStruct.host)
+	}
+
+	print(sSQL)
+
+	# If we want to return the SQL
+	if return_sql:
+		return sSQL
+
+	# Else, run the statement and return the result
+	return execute(sSQL, host = dStruct.host) and True or False

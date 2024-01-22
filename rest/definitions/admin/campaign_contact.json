@@ -26,5 +26,10 @@
 	"opened": {
 		"__type__": "timestamp",
 		"__optional__": true
+	},
+
+	"unsubscribed": {
+		"__type__": "timestamp",
+		"__optional__": true
 	}
 }

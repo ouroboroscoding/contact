@@ -38,7 +38,6 @@ if __name__ == '__main__':
 	contact.Contact.uninstall()
 	project.Project.uninstall()
 	sender.Sender.uninstall()
-	unsubscribe.Unsubscribe.uninstall()
 
 	# Add the DB
 	record_mysql.db_drop(
