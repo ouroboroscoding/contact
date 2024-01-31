@@ -16,14 +16,18 @@ import record_mysql
 from strings import strtr
 
 # Python imports
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from random import uniform
+import smtplib
+import sys
 from time import sleep, time
 
 # Pip imports
 import arrow
 
 # Record imports
-from records.admin import \
-	campaign, campaign_contact, contact, sender, unsubscribe
+from records.admin import campaign, campaign_contact, contact, sender
 
 def get_next_contact(campaign_id: str) -> dict | None:
 	"""Get Next Contact
@@ -49,7 +53,7 @@ def get_next_contact(campaign_id: str) -> dict | None:
 			return None
 
 		# Find the contacts details
-		dContact = contact.Contact.get(dCampaignContact['_contact'])
+		dContact = contact.Contact.get(dCampaignContact['_contact'], raw = True)
 
 		# If they don't exist, remove them and start again
 		if not dContact:
@@ -61,20 +65,11 @@ def get_next_contact(campaign_id: str) -> dict | None:
 			campaign_contact.CampaignContact.remove(dCampaignContact['_id'])
 			continue
 
-		# Make absolutely sure
-		if unsubscribe.Unsubscribe.exists(
-			(dCampaign['_project'], dContact['email_address']),
-			'ui_project_email'
-		):
-			campaign_contact.CampaignContact.remove(dCampaignContact['_id'])
-			continue
-
 		# Add the campaign contact ID to the data
 		dContact['campaign_contact_id'] = dCampaignContact['_id']
 
 		# Return the contact
 		return dContact
-
 
 # Only run if called directly
 if __name__ == '__main__':
@@ -88,56 +83,113 @@ if __name__ == '__main__':
 		'user': 'mysql'
 	}))
 
-	# Fetch any campaigns that are at or past their trigger
-	lCampaigns = campaign.Campaign.filter(
-		{ 'next_trigger': { 'lte': arrow.get().timestamp } },
-		raw = [ '_id', '_sender', 'min_interval', 'max_interval', 'subject',
-				'content' ]
-	)
+	# Get the domain for unsubscribing
+	sUnsubscribeRoot = 'https://%s/unsubscribe/' % \
+						config.unsubscribe.domain('localhost')
 
-	# If there's none, wait for 30 seconds
-	if not lCampaigns:
-		sleep(30)
+	# Loop forever
+	while True:
 
-	# Go through each one
-	for dCampaign in lCampaigns:
+		# Fetch any campaigns that are at or past their trigger
+		lCampaigns = campaign.Campaign.filter(
+			{ 'next_trigger': { 'lte': int(arrow.get().timestamp()) } },
+			raw = [ '_id', '_sender', 'min_interval', 'max_interval', 'subject',
+					'content' ]
+		)
 
-		# Get the sender
-		dSender = sender.Sender.get(dCampaign['_sender'], raw = True)
+		# If there's none, wait for 30 seconds
+		if not lCampaigns:
+			sleep(30)
 
-		# If the sender does not exist, pause the campaign
-		if not dSender:
-			campaign.pause(dCampaign['_id'])
-			continue
+		# Go through each one
+		for dCampaign in lCampaigns:
 
-		# Get the next contact
-		dContact = get_next_contact(dCampaign['_id'])
+			# Get the sender
+			dSender = sender.Sender.get(dCampaign['_sender'], raw = True)
 
-		# If there's none, pause the campaign and move on to the next one
-		if not dContact:
-			campaign.pause(dCampaign['_id'])
-			break
+			# If the sender does not exist, pause the campaign
+			if not dSender:
+				campaign.pause(dCampaign['_id'])
+				continue
 
-		#  If the alias is missing, set it to the name
-		if 'alias' not in dContact or not dContact['alias']:
-			dContact['alias'] = dContact['name']
+			# Get the next contact
+			dContact = get_next_contact(dCampaign['_id'])
 
-		# Generate the translation table
-		dTpl = {
-			r'{_id}': dContact['campaign_contact_id'],
-			r'{name}': dContact['name'],
-			r'{alias}': dContact['alias'],
-			r'{company}': dContact['company'],
-			r'{email_address}': dContact['email_address']
-		}
+			# If there's none, pause the campaign and move on to the next one
+			if not dContact:
+				campaign.pause(dCampaign['_id'])
+				break
 
-		print('=' * 40)
+			#  If the alias is missing, set it to the name
+			if 'alias' not in dContact or not dContact['alias']:
+				dContact['alias'] = dContact['name']
 
-		# Generate the subject using the contacts details
-		sSubject = strtr(dCampaign['subject'], dTpl)
-		print('Subject: %s' % sSubject)
+			# Generate the translation table
+			dTpl = {
+				r'{_id}': dContact['campaign_contact_id'],
+				r'{name}': dContact['name'],
+				r'{alias}': dContact['alias'],
+				r'{company}': dContact['company'],
+				r'{email_address}': dContact['email_address'],
+				r'{unsubscribe_url}': '%s%s' % (
+					sUnsubscribeRoot, dContact['campaign_contact_id']
+				)
+			}
 
-		# Generate the email using the contact details
-		sContent = strtr(dCampaign['content'], dTpl)
-		print('Content: %s' % sContent)
+			print('=' * 40)
+			print('To: %s' % dContact['email_address'])
 
+			# Generate the subject using the contacts details
+			sSubject = strtr(dCampaign['subject'], dTpl)
+			print('Subject: %s' % sSubject)
+
+			# Generate the email using the contact details
+			sContent = strtr(dCampaign['content'], dTpl)
+			print('Content: %s' % sContent)
+			print('=' * 40)
+
+			# Generate the email
+			message = MIMEMultipart()
+			message["From"] = dSender['email_address']
+			message["To"] = dContact['email_address']
+			message["Subject"] = sSubject
+			message["List-Unsubscribe"] = '<%soneclick/%s>' % (
+				sUnsubscribeRoot, dContact['campaign_contact_id']
+			)
+			message.attach(MIMEText(sContent, 'html'))
+
+			# Connect to the SMTP server
+			with smtplib.SMTP(dSender['host'], dSender['port']) as mail:
+
+				# If we need tls
+				if dSender['tls']:
+					mail.starttls()
+
+				# Login
+				mail.login(dSender['email_address'], dSender['password'])
+
+				# Send the email
+				try:
+					mail.send_message(message)
+
+					# Mark the message as sent and delivered
+					campaign_contact.sent_and_delivered(
+						dContact['campaign_contact_id']
+					)
+
+				except Exception as e:
+					print(e)
+
+					# Mark the message as sent
+					campaign_contact.sent(
+						dContact['campaign_contact_id']
+					)
+
+			# Set the next trigger for the campaign
+			campaign.set_next(
+				dCampaign['_id'],
+				[ dCampaign['min_interval'], dCampaign['max_interval'] ]
+			)
+
+		# ONLY WHILE TESTING
+		break

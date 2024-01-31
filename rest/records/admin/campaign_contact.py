@@ -263,7 +263,8 @@ def next(campaign_id: str) -> dict | Literal[False]:
 	sSQL = "SELECT `_id`, `_contact`\n" \
 		 	"FROM `%(db)s`.`%(table)s`\n" \
 			"WHERE `_campaign` = '%(campaign)s'\n" \
-			"AND `sent` = 0\n" \
+			"AND `sent` IS NULL\n" \
+			"AND `unsubscribed` IS NULL\n" \
 			"LIMIT 1" % {
 		'db': dStruct.db,
 		'table': dStruct.name,
@@ -274,6 +275,63 @@ def next(campaign_id: str) -> dict | Literal[False]:
 
 	# Select the statement and return the result
 	return select(sSQL, Select.ROW, host = dStruct.host)
+
+def sent_and_delivered(_id: str) -> bool:
+	"""Sent
+
+	Marks the campaign contact as being sent the message, it most likely was \
+	not delivered
+
+	Arguments:
+		_id (str): The campaign contact ID
+
+	Returns:
+		bool
+	"""
+
+	# Get the structs
+	dStruct = CampaignContact._parent._table._struct
+
+	# Generate the SQL to mark it as such
+	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \
+			" `sent` = NOW()\n" \
+			"WHERE `_id` = '%(_id)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'_id': escape(_id, host = dStruct.host)
+	}
+
+	# Run the SQL and return the result
+	return execute(sSQL, host = dStruct.host) and True or False
+
+def sent_and_delivered(_id: str) -> bool:
+	"""Sent and Delivered
+
+	Marks the campaign contact as being sent the message, and that it was \
+	delivered, at least so far as the SMTP server is concerned
+
+	Arguments:
+		_id (str): The campaign contact ID
+
+	Returns:
+		bool
+	"""
+
+	# Get the structs
+	dStruct = CampaignContact._parent._table._struct
+
+	# Generate the SQL to mark it as such
+	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \
+			" `sent` = NOW(),\n" \
+			" `delivered` = NOW()\n" \
+			"WHERE `_id` = '%(_id)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'_id': escape(_id, host = dStruct.host)
+	}
+
+	# Run the SQL and return the result
+	return execute(sSQL, host = dStruct.host) and True or False
 
 def unsubscribe(_id: str, contact_id: str = undefined) -> bool:
 	"""Unsubscribe

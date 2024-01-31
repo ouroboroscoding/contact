@@ -392,7 +392,7 @@ class Admin(Service):
 
 		# If nothing was deleted
 		if dRes == None:
-			return Error(errors.DB_DELETE_FAILED, [ req.data._id, 'contact' ])
+			return Error(errors.DB_DELETE_FAILED, [ req.data._id, 'category' ])
 
 		# Return OK
 		return Response(dRes)

@@ -105,15 +105,15 @@ def set_next(campaign_id: str, minmax: List[int]) -> bool:
 	dStruct = Campaign._parent._table._struct
 
 	# Get a random value between the min and max
-	iInterval = uniform(minmax[0], minmax[1])
+	iInterval = int(uniform(minmax[0], minmax[1]))
 
 	# Generate the SQL
 	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \
-			" `next_trigger` = DATE_ADD(NOW(), INTERVAL %(interval)s second)\n" \
+			" `next_trigger` = DATE_ADD(NOW(), INTERVAL %(interval)d second)\n" \
 			"WHERE `_id` = '%(_id)s'" % {
 		'db': dStruct.db,
 		'table': dStruct.name,
-		'interval': str(iInterval),
+		'interval': iInterval,
 		'_id': campaign_id
 	}
 
@@ -121,3 +121,4 @@ def set_next(campaign_id: str, minmax: List[int]) -> bool:
 
 	# Run the statement
 	return execute(sSQL, dStruct.host) and True or False
+

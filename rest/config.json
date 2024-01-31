@@ -59,6 +59,7 @@
 		"host": "0.0.0.0",
 		"port": 9100,
 		"workers": 1,
-		"timeout": 10
+		"timeout": 10,
+		"domain": "rest.contact.local"
 	}
 }
