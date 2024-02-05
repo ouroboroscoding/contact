@@ -1,7 +1,7 @@
 # coding=utf8
-""" Admin REST
+""" Contact REST
 
-Handles starting the REST server using the Admin service
+Handles starting the REST server using the Contact service
 """
 
 __author__		= "Chris Nasr"
@@ -17,7 +17,7 @@ import record_mysql
 
 # Project imports
 from . import errors
-from services.admin import Admin
+from rest.services.contact import Contact
 
 def main():
 	"""Main
@@ -35,33 +35,33 @@ def main():
 	}))
 
 	# Get the config
-	dConf = config.admin({
+	dConf = config.contact({
 		'verbose': False
 	})
 
 	# Init the service
-	oAdmin = Admin()
+	oContact = Contact()
 
 	# Register the services
-	oRest = register_services({ 'admin': oAdmin })
+	oRest = register_services({ 'contact': oContact })
 
-	# Get the admin conf
-	dAdmin = oRest['admin']
+	# Get the contact conf
+	dContact = oRest['contact']
 
 	# Run the REST server with the Client instance
 	REST(
-		name = 'admin',
-		instance = oAdmin,
+		name = 'contact',
+		instance = oContact,
 		cors = config.body.rest.allowed(),
 		lists = True,
 		on_errors = errors,
 		verbose = dConf['verbose']
 	).run(
-		host = dAdmin['host'],
-		port = dAdmin['port'],
-		workers = dAdmin['workers'],
-		timeout = 'timeout' in dAdmin and \
-			dAdmin['timeout'] or 30
+		host = dContact['host'],
+		port = dContact['port'],
+		workers = dContact['workers'],
+		timeout = 'timeout' in dContact and \
+			dContact['timeout'] or 30
 	)
 
 # Only run if called directly

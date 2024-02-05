@@ -18,7 +18,7 @@ import record_mysql
 import bottle
 
 # Record imports
-from records.admin import campaign_contact
+from records.contact import campaign_contact
 
 # Constants
 with open('templates/track/1x1.png', 'rb') as f:

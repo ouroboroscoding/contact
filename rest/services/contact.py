@@ -1,7 +1,7 @@
 # coding=utf8
-""" Admin Service
+""" Contact Service
 
-Handles all admin / data entry requests
+Handles all contact / data entry requests
 """
 
 __author__		= "Chris Nasr"
@@ -21,7 +21,7 @@ import undefined
 from operator import itemgetter
 
 # Import records
-from records.admin import \
+from records.contact import \
 	campaign, campaign_contact, category, contact, project, sender
 
 # Import errors
@@ -32,8 +32,8 @@ from shared.errors import \
 
 REPLACE_ME = '00000000-0000-0000-0000-000000000000'
 
-class Admin(Service):
-	"""Admin Service class
+class Contact(Service):
+	"""Contact Service class
 
 	Service for authorization, sign in, sign up, permissions etc.
 
@@ -42,12 +42,12 @@ class Admin(Service):
 	"""
 
 	def __init__(self):
-		"""Admin
+		"""Contact
 
 		Constructs the object
 
 		Returns:
-			Admin
+			Contact
 		"""
 		pass
 
@@ -57,7 +57,7 @@ class Admin(Service):
 		Resets the config
 
 		Returns:
-			Admin
+			Contact
 		"""
 		return self
 

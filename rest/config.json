@@ -1,8 +1,4 @@
 {
-	"admin": {
-		"verbose": false
-	},
-
 	"body": {
 		"rest": {
 			"allowed": [ "contact.local" ],
@@ -14,12 +10,16 @@
 				"workers": 1
 			},
 			"services": {
-				"admin": { "port": 10 },
+				"contact": { "port": 10 },
 				"unsubscribe": { "port": 100 },
 				"track": { "port": 101 }
 			},
 			"verbose": true
 		}
+	},
+
+	"contact": {
+		"verbose": false
 	},
 
 	"memory": {

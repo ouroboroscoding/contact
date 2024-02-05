@@ -27,7 +27,7 @@ from time import sleep, time
 import arrow
 
 # Record imports
-from records.admin import campaign, campaign_contact, contact, sender
+from records.contact import campaign, campaign_contact, contact, sender
 
 def get_next_contact(campaign_id: str) -> dict | None:
 	"""Get Next Contact

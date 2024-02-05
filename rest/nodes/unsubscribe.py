@@ -19,7 +19,7 @@ import bottle
 from jinja2 import FileSystemLoader, Environment, select_autoescape
 
 # Record imports
-from records.admin import campaign_contact, project
+from records.contact import campaign_contact, project
 
 # Templates
 tpl = { 'index': None, 'response': None }

@@ -16,7 +16,7 @@ import record_mysql
 import record_redis
 
 # Records
-from records.admin import \
+from records.contact import \
 	campaign, campaign_contact, category, contact, project, sender
 
 # Only run if called directly
