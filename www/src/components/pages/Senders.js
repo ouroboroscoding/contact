@@ -10,7 +10,7 @@
 // Ouroboros modules
 import body, { errors } from '@ouroboros/body';
 import { Tree } from '@ouroboros/define';
-import { Form, Results } from '@ouroboros/define-mui';
+import { Form, Options, Results } from '@ouroboros/define-mui';
 
 // NPM modules
 import React, { useEffect, useState } from 'react';
@@ -30,17 +30,22 @@ import { SENDER_BEING_USED } from 'errors';
 // Definitions
 import SenderDef from 'definitions/contact/sender';
 
+// Project options
+const ProjectOptions = new Options.Custom();
+
 // Generate the Tree
 const SenderTree = new Tree(SenderDef, {
 	__ui__: {
 		__create__: [ 'email_address', 'password', 'host', 'port', 'tls' ],
 		__update__: [ 'email_address', 'password', 'host', 'port', 'tls' ],
 		__results__: [
-			'_created', '_updated', 'email_address', 'host', 'port', 'tls'
+			'_created', '_updated', '_project', 'email_address', 'host', 'port',
+			'tls'
 		]
 	},
 
 	_updated: { __ui__: { __title__: 'Last Updated' } },
+	_project: { __ui__: { __options__: ProjectOptions } },
 	email_address: { __ui__: { __title__: 'E-Mail Address' } },
 	password: { __ui__: { __type__: 'password' } },
 	tls: { __ui__: { __title__: 'Enable TLS' } }
@@ -76,7 +81,10 @@ export default function Senders(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		body.read('contact', 'projects').then(projectsSet)
+		body.read('contact', 'projects').then(data => {
+			ProjectOptions.set(data.map(o => [ o._id, o.name ]));
+			projectsSet(data);
+		}, Message.error);
 	}, []);
 
 	// Project effect
@@ -87,9 +95,7 @@ export default function Senders(props) {
 		} else {
 			body.read('contact', 'senders', {
 				'_project': project
-			}).then(resultsSet, error => {
-				Message.error(error);
-			});
+			}).then(resultsSet, Message.error);
 		}
 	}, [ project ]);
 
@@ -114,9 +120,7 @@ export default function Senders(props) {
 				// Fetch the latest results
 				body.read('contact', 'senders', {
 					_project: project
-				}).then(resultsSet, error => {
-					Message.error(error);
-				});
+				}).then(resultsSet, Message.error);
 
 				// Resolve ok
 				resolve(true);
@@ -160,9 +164,7 @@ export default function Senders(props) {
 				// Fetch the latest results
 				body.read('contact', 'senders', {
 					_project: project
-				}).then(resultsSet, error => {
-					Message.error(error);
-				});
+				}).then(resultsSet, Message.error);
 			}
 		}, error => {
 			if(error.code === SENDER_BEING_USED) {
@@ -192,9 +194,7 @@ export default function Senders(props) {
 				// Fetch the latest results
 				body.read('contact', 'senders', {
 					_project: project
-				}).then(resultsSet, error => {
-					Message.error(error);
-				});
+				}).then(resultsSet, Message.error);
 
 				// Resolve ok
 				resolve(true);

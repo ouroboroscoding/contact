@@ -32,6 +32,7 @@ import { arrayFindDelete, arrayFindMerge } from '@ouroboros/tools';
 
 // Init category options
 const CategoryOptions = new Options.Custom();
+const ProjectOptions = new Options.Custom();
 
 // Generate the Tree
 const ContactTree = new Tree(ContactDef, {
@@ -42,10 +43,11 @@ const ContactTree = new Tree(ContactDef, {
 		__update__: [
 			'email_address', 'name', 'alias', 'company', 'categories'
 		],
-		__results__: [ '_created', '_updated', 'name', 'company' ]
+		__results__: [ '_created', '_updated', '_project', 'name', 'company' ]
 	},
 
 	_updated: { __ui__: { __title__: 'Last Updated' } },
+	_project: { __ui__: { __options__: ProjectOptions } },
 	email_address: { __ui__: { __title__: 'E-Mail Address' } },
 	name: { __ui__: { __title__: 'Full Name' } },
 
@@ -92,10 +94,10 @@ export default function Contacts(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		body.read('contact', 'projects').then(
-			data => projectsSet(data.map(o => [ o._id, o.name ])),
-			Message.error
-		);
+		body.read('contact', 'projects').then(data => {
+			ProjectOptions.set(data.map(o => [ o._id, o.name ]));
+			projectsSet(data);
+		}, Message.error);
 	}, []);
 
 	// Project effect
@@ -137,9 +139,7 @@ export default function Contacts(props) {
 				// Fetch the latest results
 				body.read('contact', 'contacts', {
 					'_project': project
-				}).then(resultsSet, error => {
-					Message.error(error);
-				});
+				}).then(resultsSet, Message.error);
 
 				// Resolve ok
 				resolve(true);
@@ -188,9 +188,7 @@ export default function Contacts(props) {
 				// Fetch the latest results
 				body.read('contact', 'contacts', {
 					'_project': project
-				}).then(resultsSet, error => {
-					Message.error(error);
-				});
+				}).then(resultsSet, Message.error);
 
 				// Resolve ok
 				resolve(true);
@@ -218,8 +216,8 @@ export default function Contacts(props) {
 					value={project}
 				>
 					<option value="">Select Project...</option>
-					{projects.map(l =>
-						<option value={l[0]}>{l[1]}</option>
+					{projects.map(o =>
+						<option value={o._id}>{o.name}</option>
 					)}
 				</Select>
 				<Tooltip className="flexStatic" title="Create new Contact">

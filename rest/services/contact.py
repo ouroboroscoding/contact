@@ -27,7 +27,6 @@ from records.contact import \
 # Import errors
 from shared.errors import \
 	CONTACT_UNSUBSCRIBED, \
-	EMAIL_UNSUBSCRIBED, \
 	SENDER_BEING_USED
 
 REPLACE_ME = '00000000-0000-0000-0000-000000000000'
@@ -281,6 +280,33 @@ class Contact(Service):
 
 		# Return the record
 		return Response(dCampaign)
+
+	def campaigns_read(self, req: jobject) -> Response:
+		"""Campaigns (read)
+
+		Returns all campaigns
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# If the project is not passed
+		if '_project' not in req.data:
+			return Error(errors.DATA_FIELDS, [ [ '_project', 'missing' ] ])
+
+		# Request the records
+		lCampaigns = campaign.Campaign.filter({
+			'_project': req.data._project
+		}, raw = True)
+
+		# Sort them by name
+		lCampaigns.sort(key = itemgetter('name'))
+
+		# Find and return the categories
+		return Response(lCampaigns)
 
 	def categories_read(self, req: jobject) -> Response:
 		"""Categories (read)

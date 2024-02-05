@@ -10,7 +10,7 @@
 // Ouroboros modules
 import body, { errors } from '@ouroboros/body';
 import { Tree } from '@ouroboros/define';
-import { Form, Results } from '@ouroboros/define-mui';
+import { Form, Options, Results } from '@ouroboros/define-mui';
 
 // NPM modules
 import React, { useEffect, useState } from 'react';
@@ -29,6 +29,9 @@ import Message from 'message';
 // Definitions
 import CategoryDef from 'definitions/contact/category';
 
+// Project options
+const ProjectOptions = new Options.Custom();
+
 // Generate the Tree
 const CategoryTree = new Tree(CategoryDef, {
 	__ui__: {
@@ -38,6 +41,7 @@ const CategoryTree = new Tree(CategoryDef, {
 	},
 
 	_updated: { __ui__: { __title__: 'Last Updated' } },
+	_project: { __ui__: { __options__: ProjectOptions } },
 	name: { __ui__: { __title__: 'Category Name' } }
 });
 
@@ -66,7 +70,10 @@ export default function Categories(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		body.read('contact', 'projects').then(projectsSet)
+		body.read('contact', 'projects').then(data => {
+			ProjectOptions.set(data.map(o => [ o._id, o.name ]));
+			projectsSet(data);
+		}, Message.error);
 	}, []);
 
 	// Project effect
@@ -77,9 +84,7 @@ export default function Categories(props) {
 		} else {
 			body.read('contact', 'categories', {
 				'_project': project
-			}).then(resultsSet, error => {
-				Message.error(error);
-			});
+			}).then(resultsSet, Message.error);
 		}
 	}, [ project ]);
 
@@ -104,9 +109,7 @@ export default function Categories(props) {
 				// Fetch the latest results
 				body.read('contact', 'categories', {
 					'_project': project
-				}).then(resultsSet, error => {
-					Message.error(error);
-				});
+				}).then(resultsSet, Message.error);
 
 				// Resolve ok
 				resolve(true);
@@ -150,9 +153,7 @@ export default function Categories(props) {
 				// Fetch the latest results
 				body.read('contact', 'categories', {
 					'_project': project
-				}).then(resultsSet, error => {
-					Message.error(error);
-				});
+				}).then(resultsSet, Message.error);
 			}
 		}, error => {
 			Message.error(error);
@@ -177,9 +178,7 @@ export default function Categories(props) {
 				// Fetch the latest results
 				body.read('contact', 'categories', {
 					'_project': project
-				}).then(resultsSet, error => {
-					Message.error(error);
-				});
+				}).then(resultsSet, Message.error);
 
 				// Resolve ok
 				resolve(true);
