@@ -506,17 +506,6 @@ class Contact(Service):
 		if 'email_address' not in req.data.record:
 			return Error(errors.DATA_FIELDS, [ [ 'email_address', 'missing' ] ])
 
-		# Look for the email in the unsubscribe list for the same project
-		dUnsubscribe = unsubscribe.Unsubscribe.filter({
-			'_project': req.data.record._project,
-			'email_address': req.data.record.email_address
-		}, raw = [ '_id' ])
-		if dUnsubscribe:
-			return Error(EMAIL_UNSUBSCRIBED, [
-				req.data.record._project,
-				req.data.record.email_address
-			])
-
 		# Create and validate the record
 		try:
 			req.data.record.unsubscribed = False
