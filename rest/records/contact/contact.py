@@ -1,5 +1,5 @@
 # coding=utf8
-""" Admin Contact Record
+""" Contact Record
 
 Handles the contact record structure
 """
@@ -24,7 +24,7 @@ Contact = Storage(
 
 	# The primary definition
 	jsonb.load(
-		'%s/definitions/admin/contact.json' % \
+		'%s/definitions/contact/contact.json' % \
 			Path(__file__).parent.parent.parent.resolve()
 	),
 
@@ -46,7 +46,7 @@ Contact = Storage(
 				},
 				'i_project': '_project'
 			},
-			'name': 'admin_contact',
+			'name': 'contact_contact',
 			'revisions': [ 'user' ]
 		},
 

@@ -27,7 +27,7 @@ import Typography from '@mui/material/Typography';
 import Message from 'message';
 
 // Definitions
-import ContactDef from 'definitions/admin/contact';
+import ContactDef from 'definitions/contact/contact';
 import { arrayFindDelete, arrayFindMerge } from '@ouroboros/tools';
 
 // Init category options
@@ -92,7 +92,7 @@ export default function Contacts(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		body.read('admin', 'projects').then(
+		body.read('contact', 'projects').then(
 			data => projectsSet(data.map(o => [ o._id, o.name ])),
 			Message.error
 		);
@@ -106,7 +106,7 @@ export default function Contacts(props) {
 			CategoryOptions.set([]);
 		} else {
 
-			body.read('admin', '__list', [
+			body.read('contact', '__list', [
 				[ 'contacts', { '_project': project } ],
 				[ 'categories', { '_project': project } ]
 			]).then(data => {
@@ -126,7 +126,7 @@ export default function Contacts(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the create request
-			body.create('admin', 'contact', { record }).then(data => {
+			body.create('contact', 'contact', { record }).then(data => {
 
 				// Close the create form
 				createSet(false);
@@ -135,7 +135,7 @@ export default function Contacts(props) {
 				Message.success('Contact created. Refreshing contact list.');
 
 				// Fetch the latest results
-				body.read('admin', 'contacts', {
+				body.read('contact', 'contacts', {
 					'_project': project
 				}).then(resultsSet, error => {
 					Message.error(error);
@@ -158,7 +158,7 @@ export default function Contacts(props) {
 	function resultRemove(key) {
 
 		// Send the delete request
-		body.delete('admin', 'contact', { _id: key }).then(data => {
+		body.delete('contact', 'contact', { _id: key }).then(data => {
 			if(data) {
 
 				// Notify the user
@@ -177,7 +177,7 @@ export default function Contacts(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the update request
-			body.update('admin', 'contact', {
+			body.update('contact', 'contact', {
 				_id: key,
 				record
 			}).then(data => {
@@ -186,7 +186,7 @@ export default function Contacts(props) {
 				Message.success('Contact updated. Refreshing contact list.');
 
 				// Fetch the latest results
-				body.read('admin', 'contacts', {
+				body.read('contact', 'contacts', {
 					'_project': project
 				}).then(resultsSet, error => {
 					Message.error(error);

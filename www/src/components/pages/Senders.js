@@ -28,7 +28,7 @@ import Message from 'message';
 import { SENDER_BEING_USED } from 'errors';
 
 // Definitions
-import SenderDef from 'definitions/admin/sender';
+import SenderDef from 'definitions/contact/sender';
 
 // Generate the Tree
 const SenderTree = new Tree(SenderDef, {
@@ -76,7 +76,7 @@ export default function Senders(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		body.read('admin', 'projects').then(projectsSet)
+		body.read('contact', 'projects').then(projectsSet)
 	}, []);
 
 	// Project effect
@@ -85,7 +85,7 @@ export default function Senders(props) {
 			createSet(false);
 			resultsSet(false);
 		} else {
-			body.read('admin', 'senders', {
+			body.read('contact', 'senders', {
 				'_project': project
 			}).then(resultsSet, error => {
 				Message.error(error);
@@ -103,7 +103,7 @@ export default function Senders(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the create request
-			body.create('admin', 'sender', { record }).then(data => {
+			body.create('contact', 'sender', { record }).then(data => {
 
 				// Close the create form
 				createSet(false);
@@ -112,7 +112,7 @@ export default function Senders(props) {
 				Message.success('Sender created. Refreshing sender list.');
 
 				// Fetch the latest results
-				body.read('admin', 'senders', {
+				body.read('contact', 'senders', {
 					_project: project
 				}).then(resultsSet, error => {
 					Message.error(error);
@@ -151,14 +151,14 @@ export default function Senders(props) {
 	function resultRemove(key) {
 
 		// Send the delete request
-		body.delete('admin', 'sender', { _id: key }).then(data => {
+		body.delete('contact', 'sender', { _id: key }).then(data => {
 			if(data) {
 
 				// Notify the user
 				Message.success('Sender deleted. Refreshing sender list.');
 
 				// Fetch the latest results
-				body.read('admin', 'senders', {
+				body.read('contact', 'senders', {
 					_project: project
 				}).then(resultsSet, error => {
 					Message.error(error);
@@ -181,7 +181,7 @@ export default function Senders(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the update request
-			body.update('admin', 'sender', {
+			body.update('contact', 'sender', {
 				_id: key,
 				record
 			}).then(data => {
@@ -190,7 +190,7 @@ export default function Senders(props) {
 				Message.success('Sender updated. Refreshing sender list.');
 
 				// Fetch the latest results
-				body.read('admin', 'senders', {
+				body.read('contact', 'senders', {
 					_project: project
 				}).then(resultsSet, error => {
 					Message.error(error);

@@ -1,5 +1,5 @@
 # coding=utf8
-""" Admin Category Record
+""" Category Record
 
 Handles the category record structure
 """
@@ -23,7 +23,7 @@ Category = Storage(
 
 	# The primary definition
 	jsonb.load(
-		'%s/definitions/admin/category.json' % \
+		'%s/definitions/contact/category.json' % \
 			Path(__file__).parent.parent.parent.resolve()
 	),
 
@@ -44,7 +44,7 @@ Category = Storage(
 					'type': 'unique'
 				}
 			},
-			'name': 'admin_category',
+			'name': 'contact_category',
 			'revisions': [ 'user' ]
 		},
 

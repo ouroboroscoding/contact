@@ -35,7 +35,7 @@ import Minutes from 'components/elements/Minutes';
 import Message from 'message';
 
 // Load Campaign definition
-import CampaignDef from 'definitions/admin/campaign';
+import CampaignDef from 'definitions/contact/campaign';
 
 // Create the tree
 const CampaignTree = new Tree(CampaignDef, {
@@ -62,7 +62,7 @@ export default function CampaignNew(props) {
 	useEffect(() => {
 
 		// Fetch the campaign
-		body.read('admin', 'campaign', {
+		body.read('contact', 'campaign', {
 			_id,
 			add_names: true
 		}).then(campaignSet);

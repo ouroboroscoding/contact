@@ -26,7 +26,7 @@ import Typography from '@mui/material/Typography';
 import Message from 'message';
 
 // Definitions
-import ProjectDef from 'definitions/admin/project';
+import ProjectDef from 'definitions/contact/project';
 
 // Generate the Tree
 const ProjectTree = new Tree(ProjectDef, {
@@ -78,7 +78,7 @@ export default function Projects(props) {
 	useEffect(() => {
 
 		// Fetch the projects from the server
-		body.read('admin', 'projects').then(resultsSet);
+		body.read('contact', 'projects').then(resultsSet);
 
 	}, []);
 
@@ -89,7 +89,7 @@ export default function Projects(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the create request
-			body.create('admin', 'project', { record }).then(data => {
+			body.create('contact', 'project', { record }).then(data => {
 
 				// Close the create form
 				createSet(false);
@@ -98,7 +98,7 @@ export default function Projects(props) {
 				Message.success('Project created. Refreshing project list.');
 
 				// Fetch the latest results
-				body.read('admin', 'projects').then(resultsSet);
+				body.read('contact', 'projects').then(resultsSet);
 
 				// Resolve ok
 				resolve(true);
@@ -118,14 +118,14 @@ export default function Projects(props) {
 	function resultRemove(key) {
 
 		// Send the delete request
-		body.delete('admin', 'project', { _id: key }).then(data => {
+		body.delete('contact', 'project', { _id: key }).then(data => {
 			if(data) {
 
 				// Notify the user
 				Message.success('Project deleted. Refreshing project list.');
 
 				// Fetch the latest results
-				body.read('admin', 'projects').then(resultsSet);
+				body.read('contact', 'projects').then(resultsSet);
 			}
 		}, error => {
 			Message.error(error);
@@ -139,7 +139,7 @@ export default function Projects(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the update request
-			body.update('admin', 'project', {
+			body.update('contact', 'project', {
 				_id: key,
 				record
 			}).then(data => {
@@ -148,7 +148,7 @@ export default function Projects(props) {
 				Message.success('Project updated. Refreshing project list.');
 
 				// Fetch the latest results
-				body.read('admin', 'projects').then(resultsSet);
+				body.read('contact', 'projects').then(resultsSet);
 
 				// Resolve ok
 				resolve(true);

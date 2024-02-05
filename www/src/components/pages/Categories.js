@@ -27,7 +27,7 @@ import Typography from '@mui/material/Typography';
 import Message from 'message';
 
 // Definitions
-import CategoryDef from 'definitions/admin/category';
+import CategoryDef from 'definitions/contact/category';
 
 // Generate the Tree
 const CategoryTree = new Tree(CategoryDef, {
@@ -66,7 +66,7 @@ export default function Categories(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		body.read('admin', 'projects').then(projectsSet)
+		body.read('contact', 'projects').then(projectsSet)
 	}, []);
 
 	// Project effect
@@ -75,7 +75,7 @@ export default function Categories(props) {
 			createSet(false);
 			resultsSet(false);
 		} else {
-			body.read('admin', 'categories', {
+			body.read('contact', 'categories', {
 				'_project': project
 			}).then(resultsSet, error => {
 				Message.error(error);
@@ -93,7 +93,7 @@ export default function Categories(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the create request
-			body.create('admin', 'category', { record }).then(data => {
+			body.create('contact', 'category', { record }).then(data => {
 
 				// Close the create form
 				createSet(false);
@@ -102,7 +102,7 @@ export default function Categories(props) {
 				Message.success('Category created. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'categories', {
+				body.read('contact', 'categories', {
 					'_project': project
 				}).then(resultsSet, error => {
 					Message.error(error);
@@ -141,14 +141,14 @@ export default function Categories(props) {
 	function resultRemove(key) {
 
 		// Send the delete request
-		body.delete('admin', 'category', { _id: key }).then(data => {
+		body.delete('contact', 'category', { _id: key }).then(data => {
 			if(data) {
 
 				// Notify the user
 				Message.success('Category deleted. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'categories', {
+				body.read('contact', 'categories', {
 					'_project': project
 				}).then(resultsSet, error => {
 					Message.error(error);
@@ -166,7 +166,7 @@ export default function Categories(props) {
 		return new Promise((resolve, reject) => {
 
 			// Send the update request
-			body.update('admin', 'category', {
+			body.update('contact', 'category', {
 				_id: key,
 				record
 			}).then(data => {
@@ -175,7 +175,7 @@ export default function Categories(props) {
 				Message.success('Category updated. Refreshing category list.');
 
 				// Fetch the latest results
-				body.read('admin', 'categories', {
+				body.read('contact', 'categories', {
 					'_project': project
 				}).then(resultsSet, error => {
 					Message.error(error);

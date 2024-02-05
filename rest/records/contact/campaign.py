@@ -1,5 +1,5 @@
 # coding=utf8
-""" Admin Campaign Record
+""" Campaign Record
 
 Handles the campaign record structure
 """
@@ -26,7 +26,7 @@ Campaign = Storage(
 
 	# The primary definition
 	jsonb.load(
-		'%s/definitions/admin/campaign.json' % \
+		'%s/definitions/contact/campaign.json' % \
 			Path(__file__).parent.parent.parent.resolve()
 	),
 
@@ -46,7 +46,7 @@ Campaign = Storage(
 				'i_project': '_project',
 				'i_next_trigger': 'next_trigger'
 			},
-			'name': 'admin_campaign',
+			'name': 'contact_campaign',
 			'revisions': [ 'user' ]
 		},
 

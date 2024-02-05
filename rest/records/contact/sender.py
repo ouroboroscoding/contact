@@ -1,5 +1,5 @@
 # coding=utf8
-""" Admin Sender Record
+""" Sender Record
 
 Handles the sender record structure
 """
@@ -23,7 +23,7 @@ Sender = Storage(
 
 	# The primary definition
 	jsonb.load(
-		'%s/definitions/admin/sender.json' % \
+		'%s/definitions/contact/sender.json' % \
 			Path(__file__).parent.parent.parent.resolve()
 	),
 
@@ -45,7 +45,7 @@ Sender = Storage(
 					'type': 'unique'
 				}
 			},
-			'name': 'admin_sender',
+			'name': 'contact_sender',
 			'revisions': [ 'user' ]
 		},
 

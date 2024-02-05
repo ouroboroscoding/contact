@@ -36,7 +36,7 @@ import Minutes from 'components/elements/Minutes';
 import Message from 'message';
 
 // Load Campaign definition
-import CampaignDef from 'definitions/admin/campaign';
+import CampaignDef from 'definitions/contact/campaign';
 
 // Create the tree
 const CampaignTree = new Tree(CampaignDef, {
@@ -72,7 +72,7 @@ export default function CampaignNew(props) {
 
 	// Projects load effect
 	useEffect(() => {
-		body.read('admin', 'projects').then(projectsSet, Message.error);
+		body.read('contact', 'projects').then(projectsSet, Message.error);
 	}, []);
 
 	// Project effect
@@ -80,7 +80,7 @@ export default function CampaignNew(props) {
 		if(project === '-1') {
 			sendersSet([]);
 		} else {
-			body.read('admin', '__list', [
+			body.read('contact', '__list', [
 				['senders', { _project: project }],
 				['categories', { _project: project }]
 			], ).then(data => {
@@ -179,7 +179,7 @@ export default function CampaignNew(props) {
 		}
 
 		// Send the request
-		body.create('admin', 'campaign', oData).then(data => {
+		body.create('contact', 'campaign', oData).then(data => {
 
 			// Success
 			Message.success('New Campaign created');

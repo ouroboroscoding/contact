@@ -1,5 +1,5 @@
 # coding=utf8
-""" Admin Project Record
+""" Project Record
 
 Handles the project record structure
 """
@@ -24,7 +24,7 @@ Project = Storage(
 
 	# The primary definition
 	jsonb.load(
-		'%s/definitions/admin/project.json' % \
+		'%s/definitions/contact/project.json' % \
 			Path(__file__).parent.parent.parent.resolve()
 	),
 
@@ -58,7 +58,7 @@ Project = Storage(
 					'type': 'unique'
 				}
 			},
-			'name': 'admin_project',
+			'name': 'contact_project',
 			'revisions': [ 'user' ]
 		},
 

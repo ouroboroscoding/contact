@@ -1,5 +1,5 @@
 # coding=utf8
-""" Admin Campaign Contact Record
+""" Campaign Contact Record
 
 Handles the campaign contact record structure
 """
@@ -22,14 +22,14 @@ from pathlib import Path
 from typing import Dict, List, Literal
 
 # Other records
-from records.admin import contact
+from records.contact import contact
 
 # Create the Storage instance
 CampaignContact = Storage(
 
 	# The primary definition
 	jsonb.load(
-		'%s/definitions/admin/campaign_contact.json' % \
+		'%s/definitions/contact/campaign_contact.json' % \
 			Path(__file__).parent.parent.parent.resolve()
 	),
 
@@ -51,7 +51,7 @@ CampaignContact = Storage(
 				},
 				'i_contact': '_contact'
 			},
-			'name': 'admin_campaign_contact'
+			'name': 'contact_campaign_contact'
 		}
 	}
 )

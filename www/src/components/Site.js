@@ -1,9 +1,10 @@
 /**
  * Site
  *
- * Primary entry into Admin site
+ * Primary entry into Contact site
  *
  * @author Chris Nasr <chris@ouroboroscoding.com>
+ * @copyright Ouroboros Coding Inc.
  * @created 2023-01-17
  */
 
