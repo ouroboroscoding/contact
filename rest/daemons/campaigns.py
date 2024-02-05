@@ -83,9 +83,11 @@ if __name__ == '__main__':
 		'user': 'mysql'
 	}))
 
-	# Get the domain for unsubscribing
-	sUnsubscribeRoot = 'https://%s/unsubscribe/' % \
-						config.unsubscribe.domain('localhost')
+	# Get the domain for tracking / unsubscribing
+	sTrackRoot = 'https://%s/' % \
+		config.track.domain('track.contact.local')
+	sUnsubscribeRoot = 'https://%s/' % \
+		config.unsubscribe.domain('unsubscribe.contact.local')
 
 	# Loop forever
 	while True:
@@ -145,15 +147,20 @@ if __name__ == '__main__':
 
 			# Generate the email using the contact details
 			sContent = strtr(dCampaign['content'], dTpl)
+
+			# Add the tracking pixel to the start of the content
+			sContent = '<img src="%s%s" />' % (
+				sTrackRoot + dContact['campaign_contact_id']
+			) + sContent
 			print('Content: %s' % sContent)
 			print('=' * 40)
 
 			# Generate the email
 			message = MIMEMultipart()
-			message["From"] = dSender['email_address']
-			message["To"] = dContact['email_address']
-			message["Subject"] = sSubject
-			message["List-Unsubscribe"] = '<%soneclick/%s>' % (
+			message['From'] = dSender['email_address']
+			message['To'] = dContact['email_address']
+			message['Subject'] = sSubject
+			message['List-Unsubscribe'] = '<%soneclick/%s>' % (
 				sUnsubscribeRoot, dContact['campaign_contact_id']
 			)
 			message.attach(MIMEText(sContent, 'html'))

@@ -61,7 +61,7 @@
 		"port": 9101,
 		"workers": 1,
 		"timeout": 10,
-		"domain": "rest.contact.local"
+		"domain": "track.contact.local"
 	},
 
 	"unsubscribe": {
@@ -69,6 +69,6 @@
 		"port": 9100,
 		"workers": 1,
 		"timeout": 10,
-		"domain": "rest.contact.local"
+		"domain": "unsubscribe.contact.local"
 	}
 }

@@ -17,7 +17,7 @@ import record_mysql
 
 # Project imports
 from . import errors
-from rest.services.contact import Contact
+from services.contact import Contact
 
 def main():
 	"""Main
