@@ -32,9 +32,10 @@ const ProjectOptions = new Options.Custom();
 // Generate the Tree
 const CampaignTree = new Tree(CampaignDef, {
 	__ui__: {
-		__results__: [ '_created', '_updated', '_project', 'name' ]
+		__results__: [ '_id', '_created', '_updated', '_project', 'name' ]
 	},
 
+	_id: { __ui__: { __title__: 'ID' } },
 	_updated: { __ui__: { __title__: 'Last Updated' } },
 	_project: { __ui__: { __options__: ProjectOptions } },
 	name: { __ui__: { __title__: 'Campaign Name' } }
@@ -98,7 +99,7 @@ export default function CampaignsExisting(props) {
 	return (
 		<Box id="categories" className="flexDynamic padding">
 			<Box className="pageHeader flexColumns">
-				<h1 className="flexDynamic">Categories</h1>
+				<h1 className="flexDynamic">Existing Campaigns</h1>
 				<Select
 					native
 					size="small"

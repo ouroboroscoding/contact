@@ -43,9 +43,12 @@ const ContactTree = new Tree(ContactDef, {
 		__update__: [
 			'email_address', 'name', 'alias', 'company', 'categories'
 		],
-		__results__: [ '_created', '_updated', '_project', 'name', 'company' ]
+		__results__: [
+			'_id', '_created', '_updated', '_project', 'name', 'company'
+		]
 	},
 
+	_id: { __ui__: { __title__: 'ID' } },
 	_updated: { __ui__: { __title__: 'Last Updated' } },
 	_project: { __ui__: { __options__: ProjectOptions } },
 	email_address: { __ui__: { __title__: 'E-Mail Address' } },

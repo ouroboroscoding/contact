@@ -39,11 +39,12 @@ const SenderTree = new Tree(SenderDef, {
 		__create__: [ 'email_address', 'password', 'host', 'port', 'tls' ],
 		__update__: [ 'email_address', 'password', 'host', 'port', 'tls' ],
 		__results__: [
-			'_created', '_updated', '_project', 'email_address', 'host', 'port',
-			'tls'
+			'_id', '_created', '_updated', '_project', 'email_address', 'host',
+			'port', 'tls'
 		]
 	},
 
+	_id: { __ui__: { __title__: 'ID' } },
 	_updated: { __ui__: { __title__: 'Last Updated' } },
 	_project: { __ui__: { __options__: ProjectOptions } },
 	email_address: { __ui__: { __title__: 'E-Mail Address' } },

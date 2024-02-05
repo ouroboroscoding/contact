@@ -34,10 +34,11 @@ const ProjectTree = new Tree(ProjectDef, {
 		__create__: [ 'name', 'short_code', 'description' ],
 		__update__: [ 'name', 'description' ],
 		__results__: [
-			'_created', '_updated', 'name', 'short_code', 'description'
+			'_id', '_created', '_updated', 'name', 'short_code', 'description'
 		]
 	},
 
+	_id: { __ui__: { __title__: 'ID' } },
 	_updated: { __ui__: { __title__: 'Last Updated' } },
 	name: { __ui__: { __title__: 'Project Name' } },
 	short_code: { __ui__: { __title__: 'Short Code ( 3 or 4 letters )' } }
