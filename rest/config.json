@@ -14,8 +14,9 @@
 				"workers": 1
 			},
 			"services": {
-				"admin": {"port": 10},
-				"unsubscribe": {"port": 100}
+				"admin": { "port": 10 },
+				"unsubscribe": { "port": 100 },
+				"track": { "port": 101 }
 			},
 			"verbose": true
 		}

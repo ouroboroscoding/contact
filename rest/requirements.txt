@@ -8,7 +8,7 @@ jobject==1.0.2
 jsonb==1.0.0
 memory-oc==1.0.0
 namedredis==1.0.1
-record-mysql==1.0.0
+record-mysql==1.0.1
 record-oc==1.0.0
 record-redis==1.0.0
 strings-oc==1.0.3
