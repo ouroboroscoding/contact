@@ -16,6 +16,9 @@ import jsonb
 from record_mysql import Storage
 from record_mysql.server import execute
 
+# Pip imports
+import arrow
+
 # Python imports
 from pathlib import Path
 from random import uniform
@@ -106,6 +109,21 @@ def set_next(campaign_id: str, minmax: List[int]) -> bool:
 
 	# Get a random value between the min and max
 	iInterval = int(uniform(minmax[0], minmax[1]))
+
+	# Get the current time, then use it to get the cut off time
+	oNow = arrow.get(tzinfo='America/Montreal')
+	oCutoff = arrow.get(
+		'%s 15:30:00' % oNow.format('YYYY-MM-DD'),
+		'YYYY-MM-DD HH:mm:ss',
+		tzinfo='America/Montreal'
+	)
+
+	# If the current time + the interval, is beyond the cut off, set it for
+	#	the next day
+	oNext = oNow.shift(seconds=iInterval)
+	if oNext > oCutoff:
+		oTomorrow = oNow.shift(days=1).replace(hour=8, minute=0, second=0)
+		iInterval = int(oTomorrow.timestamp() - oNow.timestamp()) + iInterval
 
 	# Generate the SQL
 	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \

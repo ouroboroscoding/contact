@@ -18,10 +18,10 @@ from strings import strtr
 # Python imports
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from pprint import pformat
 from random import uniform
 import smtplib
-import sys
-from time import sleep, time
+from time import sleep
 
 # Pip imports
 import arrow
@@ -101,10 +101,13 @@ if __name__ == '__main__':
 
 		# If there's none, wait for 30 seconds
 		if not lCampaigns:
+			print('No campaigns found. Sleeping...')
 			sleep(30)
 
 		# Go through each one
 		for dCampaign in lCampaigns:
+
+			print('Working on: %s' % pformat(dCampaign))
 
 			# Get the sender
 			dSender = sender.Sender.get(dCampaign['_sender'], raw = True)
@@ -150,7 +153,7 @@ if __name__ == '__main__':
 
 			# Add the tracking pixel to the start of the content
 			sContent = '<img src="%s%s" />' % (
-				sTrackRoot + dContact['campaign_contact_id']
+				sTrackRoot, dContact['campaign_contact_id']
 			) + sContent
 			print('Content: %s' % sContent)
 			print('=' * 40)
@@ -197,6 +200,3 @@ if __name__ == '__main__':
 				dCampaign['_id'],
 				[ dCampaign['min_interval'], dCampaign['max_interval'] ]
 			)
-
-		# ONLY WHILE TESTING
-		break

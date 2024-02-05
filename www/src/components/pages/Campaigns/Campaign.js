@@ -43,14 +43,14 @@ const CampaignTree = new Tree(CampaignDef, {
 });
 
 /**
- * Campaign New
+ * Campaign
  *
- * @name CampaignNew
+ * @name Campaign
  * @access public
  * @param Object props Properties passed to the component
  * @returns React.Component
  */
-export default function CampaignNew(props) {
+export default function Campaign(props) {
 
 	// State
 	const [ campaign, campaignSet ] = useState(false);
