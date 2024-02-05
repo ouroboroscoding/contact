@@ -105,6 +105,7 @@ export default function Contacts(props) {
 			resultsSet(false);
 			CategoryOptions.set([]);
 		} else {
+
 			body.read('admin', '__list', [
 				[ 'contacts', { '_project': project } ],
 				[ 'categories', { '_project': project } ]

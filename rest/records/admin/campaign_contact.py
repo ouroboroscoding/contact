@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Dict, List, Literal
 
 # Other records
-from records.admin import contact, project
+from records.admin import contact
 
 # Create the Storage instance
 CampaignContact = Storage(
@@ -81,9 +81,6 @@ def unsent_by_campaigns(campaign_ids: List[str]) -> Dict[str, int]:
 		'campaigns': '\',\''.join(campaign_ids)
 	}
 
-	# DEBUGGING
-	print(sSQL)
-
 	# Run the search and return the result
 	return select(
 		sSQL,
@@ -124,8 +121,6 @@ def add_contacts_all(campaign_id: str, project_id: str) -> None:
 		'ctable': dContact.name,
 		'project': project_id
 	}
-
-	print(sSQL)
 
 	# Run the insert and return the number of rows added
 	return execute(sSQL, dStruct.host)
@@ -171,8 +166,6 @@ def add_contacts_by_categories(
 		'categories': '\',\''.join(category_ids)
 	}
 
-	print(sSQL)
-
 	# Run the insert and return the number of rows added
 	return execute(sSQL, dStruct.host)
 
@@ -203,8 +196,6 @@ def add_contacts_list(campaign_id: str, contact_ids: List[str]) -> None:
 		'table': dStruct.name,
 		'rows': ',\n'.join([ sValues % s for s in contact_ids ])
 	}
-
-	print(sSQL)
 
 	# Run the insert and return the number of rows added
 	return execute(sSQL, dStruct.host)
@@ -239,8 +230,6 @@ def get_with_contact(_id: str) -> dict | None:
 		'_id': escape(_id, host = dStruct.host)
 	}
 
-	print(sSQL)
-
 	# Run the statement return the row
 	return select(sSQL, Select.ROW, host = dStruct.host)
 
@@ -271,10 +260,35 @@ def next(campaign_id: str) -> dict | Literal[False]:
 		'campaign': campaign_id
 	}
 
-	print(sSQL)
-
 	# Select the statement and return the result
 	return select(sSQL, Select.ROW, host = dStruct.host)
+
+def opened(_id: str, contact_id: str = undefined) -> bool:
+	"""Opened
+
+	Handles marking the user as opening the email for the specific campaign
+
+	Arguments:
+		_id (str): The campaign contact ID
+
+	Returns:
+		bool
+	"""
+
+	# Get the structs
+	dStruct = CampaignContact._parent._table._struct
+
+	# Generate the SQL to mark it as such
+	sSQL = "UPDATE `%(db)s`.`%(table)s` SET\n" \
+			" `opened` = NOW()\n" \
+			"WHERE `_id` = '%(_id)s'" % {
+		'db': dStruct.db,
+		'table': dStruct.name,
+		'_id': escape(_id, host = dStruct.host)
+	}
+
+	# Run the SQL and return the result
+	return execute(sSQL, host = dStruct.host) and True or False
 
 def sent_and_delivered(_id: str) -> bool:
 	"""Sent

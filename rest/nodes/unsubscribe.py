@@ -12,7 +12,6 @@ __created__		= "2022-08-25"
 
 # Ouroboros imports
 from config import config
-from record.exceptions import RecordDuplicate, RecordServerException
 import record_mysql
 
 # Pip imports
@@ -20,13 +19,10 @@ import bottle
 from jinja2 import FileSystemLoader, Environment, select_autoescape
 
 # Record imports
-from records.admin import campaign_contact, contact, project
+from records.admin import campaign_contact, project
 
 # Templates
-tpl = {
-	'index': None,
-	'response': None
-}
+tpl = { 'index': None, 'response': None }
 
 class Unsubscribe(bottle.Bottle):
 	"""Unsubscribe
