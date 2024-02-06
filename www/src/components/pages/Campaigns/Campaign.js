@@ -18,14 +18,6 @@ import { useParams } from 'react-router-dom';
 
 // Material UI
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormHelperText from '@mui/material/FormHelperText';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import Switch from '@mui/material/Switch';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 
@@ -159,9 +151,9 @@ export default function Campaign(props) {
 			</Tabs>
 			{(tab === 0 &&
 				<Box className="campaign padding">
-					{campaign === false && (
+					{(campaign === false &&
 						<Box className="padding">Loading...</Box>
-					) || (
+					) || (campaign &&
 						<Form
 							gridSizes={GRID_SIZES}
 							onSubmit={campaignUpdate}

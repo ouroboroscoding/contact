@@ -15,11 +15,6 @@ import { DefineNodeBase } from '@ouroboros/define-mui';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-// Material UI
-import FormControl from '@mui/material/FormControl';
-import FormHelperText from '@mui/material/FormHelperText';
-import InputLabel from '@mui/material/InputLabel';
-
 // Project components
 import Minutes from 'components/elements/Minutes';
 

@@ -8,9 +8,9 @@
  */
 
 // Ouroboros modules
-import body, { errors } from '@ouroboros/body';
+import body from '@ouroboros/body';
 import { Tree } from '@ouroboros/define';
-import { Form, Options, Results } from '@ouroboros/define-mui';
+import { Options, Results } from '@ouroboros/define-mui';
 
 // NPM modules
 import React, { useEffect, useState } from 'react';
@@ -108,7 +108,7 @@ export default function CampaignsExisting(props) {
 				>
 					<option value="">Select Project...</option>
 					{projects.map(o =>
-						<option value={o._id}>{o.name}</option>
+						<option key={o._id} value={o._id}>{o.name}</option>
 					)}
 				</Select>
 			</Box>

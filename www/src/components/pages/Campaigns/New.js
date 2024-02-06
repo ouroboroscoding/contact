@@ -12,6 +12,7 @@ import body, { errors } from '@ouroboros/body';
 import { Tree } from '@ouroboros/define';
 import { DefineNode } from '@ouroboros/define-mui';
 import RadioButtons from '@ouroboros/react-radiobuttons-mui'
+import { pathToTree } from '@ouroboros/tools';
 
 // NPM modules
 import React, { useEffect, useState } from 'react';
@@ -58,7 +59,7 @@ export default function CampaignNew(props) {
 	const [ contacts, contactsSet ] = useState('all')
 	const [ contactsList, contactsListSet ] = useState([]);
 	const [ content, contentSet ] = useState('');
-	const [ errors, errorsSet ] = useState({});
+	const [ errs, errsSet ] = useState({});
 	const [ minMax, minMaxSet ] = useState([ 300, 600 ]);
 	const [ name, nameSet ] = useState('');
 	const [ project, projectSet ] = useState('-1');
@@ -187,7 +188,13 @@ export default function CampaignNew(props) {
 			// Navigate to the new campaign
 			navigate(`/campaigns/${data}`);
 
-		}, Message.error);
+		}, error => {
+			if(error.code === errors.DATA_FIELDS) {
+				errsSet(pathToTree(error.msg));
+			} else {
+				Message.error(error);
+			}
+		});
 	}
 
 	// Render
@@ -198,7 +205,7 @@ export default function CampaignNew(props) {
 			</Box>
 			<Grid container spacing={2} className="campaignForm">
 				<Grid item xs={12} md={6} className="field">
-					<FormControl error={errors.records && errors.records._project && errors.records._project !== false} variant="outlined">
+					<FormControl error={errs.records && errs.records._project && errs.records._project !== false} variant="outlined">
 						<InputLabel id="campaignNewProject">Project</InputLabel>
 						<Select
 							label="Project"
@@ -212,14 +219,14 @@ export default function CampaignNew(props) {
 								<option key={o._id} value={o._id}>{o.name}</option>
 							)}
 						</Select>
-						{errors.records && errors.records._project &&
-							<FormHelperText>{errors.record._project}</FormHelperText>
+						{errs.records && errs.records._project &&
+							<FormHelperText>{errs.record._project}</FormHelperText>
 						}
 					</FormControl>
 				</Grid>
 				{project !== '-1' && <>
 					<Grid item xs={12} md={6} className="field">
-						<FormControl error={errors.records && errors.records._sender && errors.records._sender !== false} variant="outlined">
+						<FormControl error={errs.records && errs.records._sender && errs.records._sender !== false} variant="outlined">
 							<InputLabel id="campaignNewSender">Sender</InputLabel>
 							<Select
 								label="Sender"
@@ -233,15 +240,15 @@ export default function CampaignNew(props) {
 									<option key={o.email_address} value={o._id}>{o.email_address}</option>
 								)}
 							</Select>
-							{errors.records && errors.records._sender &&
-								<FormHelperText>{errors.record._sender}</FormHelperText>
+							{errs.records && errs.records._sender &&
+								<FormHelperText>{errs.record._sender}</FormHelperText>
 							}
 						</FormControl>
 					</Grid>
 					{sender !== '-1' && <>
 						<Grid item xs={12} md={4} className="field">
 							<DefineNode
-								error={(errors.record && errors.record.name) || false}
+								error={(errs.record && errs.record.name) || false}
 								name="name"
 								node={CampaignTree.get('name')}
 								onChange={nameSet}
@@ -251,7 +258,7 @@ export default function CampaignNew(props) {
 						</Grid>
 						<Grid item xs={12} md={4}>
 							<Minutes
-								error={(errors.record && errors.record.min_interval) || false}
+								error={(errs.record && errs.record.min_interval) || false}
 								label="Minimum Interval"
 								onChange={val => minMaxChange('min', val)}
 								value={minMax[0]}
@@ -259,7 +266,7 @@ export default function CampaignNew(props) {
 						</Grid>
 						<Grid item xs={12} md={4}>
 							<Minutes
-								error={(errors.record && errors.record.max_interval) || false}
+								error={(errs.record && errs.record.max_interval) || false}
 								label="Maxmimum Interval"
 								onChange={val => minMaxChange('max', val)}
 								value={minMax[1]}
@@ -267,7 +274,7 @@ export default function CampaignNew(props) {
 						</Grid>
 						<Grid item xs={12} className="field">
 							<DefineNode
-								error={(errors.record && errors.record.subject) || false}
+								error={(errs.record && errs.record.subject) || false}
 								name="subject"
 								node={CampaignTree.get('subject')}
 								onChange={subjectSet}
@@ -276,15 +283,15 @@ export default function CampaignNew(props) {
 							/>
 						</Grid>
 						<Grid item xs={12} className="field">
-							<FormControl error={errors.records && errors.records.content && errors.records.content !== false} variant="outlined">
+							<FormControl error={errs.records && errs.records.content && errs.records.content !== false} variant="outlined">
 								<InputLabel id="campaignNewContent" shrink={true}>E-Mail Content Template</InputLabel>
 								<HTML
 									labelId="campaignNewContent"
 									onChange={contentSet}
 									value={content}
 								/>
-								{errors.records && errors.records.content &&
-									<FormHelperText>{errors.record.content}</FormHelperText>
+								{errs.records && errs.records.content &&
+									<FormHelperText>{errs.record.content}</FormHelperText>
 								}
 							</FormControl>
 						</Grid>

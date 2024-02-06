@@ -11,7 +11,7 @@
     "@ouroboros/clone": "^1.0.1",
     "@ouroboros/dates": "^1.0.0",
     "@ouroboros/define": "^1.0.3",
-    "@ouroboros/define-mui": "^1.4.7",
+    "@ouroboros/define-mui": "^1.4.8",
     "@ouroboros/events": "^1.0.0",
     "@ouroboros/react-radiobuttons-mui": "^1.0.1",
     "@ouroboros/tools": "^0.5.3",
