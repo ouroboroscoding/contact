@@ -137,7 +137,7 @@ export default function Senders(props) {
 		});
 	}
 
-	// Calle when create button clicked
+	// Called when create button clicked
 	function createToggle() {
 
 		// If we're already enabled

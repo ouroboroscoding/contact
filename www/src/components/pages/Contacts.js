@@ -13,13 +13,16 @@ import { Tree } from '@ouroboros/define';
 import { Form, Options, Results } from '@ouroboros/define-mui';
 
 // NPM modules
+import { convertCSVToArray } from 'convert-csv-to-array';
 import React, { useEffect, useState } from 'react';
 
 // Material UI
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Select from '@mui/material/Select';
+import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
@@ -28,7 +31,7 @@ import Message from 'message';
 
 // Definitions
 import ContactDef from 'definitions/contact/contact';
-import { arrayFindDelete, arrayFindMerge } from '@ouroboros/tools';
+import { arrayFindDelete } from '@ouroboros/tools';
 
 // Init category options
 const CategoryOptions = new Options.Custom();
@@ -90,7 +93,9 @@ const GRID_SIZES = {
 export default function Contacts(props) {
 
 	// State
+	const [ cats, catsSet ] = useState(false);
 	const [ create, createSet ] = useState(false);
+	const [ csv, csvSet ] = useState(false);
 	const [ project, projectSet ] = useState('');
 	const [ projects, projectsSet ] = useState([]);
 	const [ results, resultsSet ] = useState(false);
@@ -106,7 +111,9 @@ export default function Contacts(props) {
 	// Project effect
 	useEffect(() => {
 		if(project === '') {
+			catsSet(false);
 			createSet(false);
+			csvSet(false);
 			resultsSet(false);
 			CategoryOptions.set([]);
 		} else {
@@ -116,10 +123,41 @@ export default function Contacts(props) {
 				[ 'categories', { '_project': project } ]
 			]).then(data => {
 				resultsSet(data[0][1].data);
+				catsSet(data[1][1].data.reduce((o, l) => Object.assign(o, {[l.name]: l._id}), {}));
 				CategoryOptions.set(data[1][1].data.map(o => [ o._id, o.name ]))
 			}, Message.error);
 		}
 	}, [ project ]);
+
+	// Called when create button clicked
+	function createToggle() {
+
+		// If we're already enabled
+		if(create) {
+			createSet(false);
+		} else {
+			if(project === '') {
+				Message.success('Please select a Project first');
+			} else {
+				createSet(true);
+			}
+		}
+	}
+
+	// Called when csv button clicked
+	function csvToggle() {
+
+		// If we're already enabled
+		if(csv) {
+			csvSet(false);
+		} else {
+			if(project === '') {
+				Message.success('Please select a Project first');
+			} else {
+				csvSet('');
+			}
+		}
+	}
 
 	// Called when the create form is submitted
 	function createSubmit(record) {
@@ -155,6 +193,48 @@ export default function Contacts(props) {
 				}
 			});
 		});
+	}
+
+	// Called to create the records from the CSV
+	function csvSubmit() {
+
+		// Add the header and the actual CSV
+		const sContent = 'email_address,name,alias,company,categories\n' + csv.trim() + '\n';
+
+		// Convert it to an array of objects
+		const lContacts = convertCSVToArray(sContent, {
+			header: false,
+			type: 'object',
+			separator: ','
+		});
+
+		// Go through each contact
+		for(const o of lContacts) {
+			if(o.categories in cats) {
+				o.categories = [ cats[o.categories] ]
+			} else {
+				delete o.categories;
+			}
+		}
+
+		// Send the data to the server
+		body.create('contact', 'contacts', {
+			_project: project,
+			records: lContacts
+		}).then(data => {
+
+			// Close the csv form
+			csvSet(false);
+
+			// Notify the user
+			Message.success('Contacts created. Refreshing contact list.');
+
+			// Fetch the latest results
+			body.read('contact', 'contacts', {
+				'_project': project
+			}).then(resultsSet, Message.error);
+
+		}, Message.error);
 	}
 
 	// Called to delete a contact
@@ -197,7 +277,6 @@ export default function Contacts(props) {
 				resolve(true);
 
 			}, error => {
-				console.error(error);
 				if(error.code === errors.DATA_FIELDS) {
 					reject(error.msg);
 				} else {
@@ -223,14 +302,40 @@ export default function Contacts(props) {
 						<option value={o._id}>{o.name}</option>
 					)}
 				</Select>
-				<Tooltip className="flexStatic" title="Create new Contact">
-					<IconButton onClick={() => createSet(b => !b)} className={create ? 'open' : null}>
+				<Tooltip className="flexStatic" title={project !== '' ? 'Import CSV' : 'Select a Project'}>
+					<IconButton onClick={csvToggle} className={csv ? 'open' : null}>
+						<i className="fa-solid fa-file-csv" />
+					</IconButton>
+				</Tooltip>
+				<Tooltip className="flexStatic" title={project !== '' ? 'Create new Contact' : 'Select a Project'}>
+					<IconButton onClick={createToggle} className={create !== false ? 'open' : null}>
 						<i className="fa-solid fa-circle-plus" />
 					</IconButton>
 				</Tooltip>
 			</Box>
+			{csv !== false &&
+				<Paper className="padding">
+					<Typography>Enter CSV text below</Typography>
+					<Box className="field">
+						<TextField
+							onChange={ev => csvSet(ev.target.value)}
+							multiline={true}
+							value={csv}
+							variant="outlined"
+						/>
+					</Box>
+					<br />
+					<Box className="actions">
+						<Button
+							color="primary"
+							onClick={csvSubmit}
+							variant="contained"
+						>Add Contacts</Button>
+					</Box>
+				</Paper>
+			}
 			{create &&
-				<Paper>
+				<Paper className="padding">
 					<Form
 						gridSizes={GRID_SIZES}
 						onCancel={() => createSet(false)}

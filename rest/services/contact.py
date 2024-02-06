@@ -251,7 +251,9 @@ class Contact(Service):
 		# Fetch the list of contacts associated and add them to the record
 		dCampaign['contacts'] = campaign_contact.CampaignContact.filter({
 			'_campaign': req.data._id
-		}, raw = [ '_id', '_contact', 'sent', 'delivered', 'opened' ])
+		}, raw = [
+			'_id', '_contact', 'sent', 'delivered', 'opened', 'unsubscribed'
+		])
 
 		# If names are requested
 		if 'add_names' in req.data and req.data.add_names:
@@ -268,18 +270,75 @@ class Contact(Service):
 
 			# Fetch the contact names
 			dContacts = {
-				d['_id']: d['name'] for d in contact.Contact.get([
+				d['_id']: [
+					d['name'],
+					d['email_address']
+				] for d in contact.Contact.get([
 					d2['_contact'] for d2 in dCampaign['contacts']
-				], raw = [ '_id', 'name' ])
+				], raw = [ '_id', 'name', 'email_address' ])
 			}
 
 			# Go through each contact and add a name if it exists or not
 			for d in dCampaign['contacts']:
-				try: d['contact_name'] = dContacts[d['_contact']]
-				except: d['contact_name'] = 'CONTACT NOT FOUND'
+				try:
+					d['name'] = dContacts[d['_contact']][0]
+					d['email_address'] = dContacts[d['_contact']][1]
+				except:
+					d['name'] = 'CONTACT NOT FOUND'
+					d['email_address'] = 'CONTACT NOT FOUND'
 
 		# Return the record
 		return Response(dCampaign)
+
+	def campaign_update(self, req: jobject) -> Response:
+		"""Campaign (update)
+
+		Updates an existing campaign
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# Check minimum fields
+		try: evaluate(req.data, [ '_id', 'record' ])
+		except ValueError as e:
+			return Error(
+				errors.DATA_FIELDS, [ [ k, 'missing' ] for k in e.args ])
+
+		# If the record is not a dict
+		if not isinstance(req.data.record, dict):
+			return Error(errors.DATA_FIELDS, [ [ 'record', 'invalid' ] ])
+
+		# Find the record
+		oCampaign = campaign.Campaign.get(req.data._id)
+		if not oCampaign:
+			return Error(errors.DB_NO_RECORD, [ req.data._id, 'campaign' ])
+
+		# Remove any fields found that can't be altered by the user
+		without(
+			req.data.record,
+			[ '_id', '_created', '_updated', '_project' ],
+			True
+		)
+
+		# Update it using the record data sent
+		try:
+			dChanges = oCampaign.update(req.data.record)
+		except RecordDuplicate as e:
+			return Error(errors.DB_DUPLICATE, e.args)
+
+		# Test if the updates are valid
+		if not oCampaign.valid():
+			return Error(errors.DATA_FIELDS, oCampaign.errors)
+
+		# Save the record and store the result
+		bRes = oCampaign.save(revision_info = { 'user' : REPLACE_ME })
+
+		# Return the changes or False
+		return Response(bRes and dChanges or False)
 
 	def campaigns_read(self, req: jobject) -> Response:
 		"""Campaigns (read)
@@ -540,7 +599,7 @@ class Contact(Service):
 				revision_info = { 'user': REPLACE_ME }
 			)
 		except ValueError as e:
-			return Error(errors.DATA_FIELDS, e.args)
+			return Error(errors.DATA_FIELDS, e.args[0])
 		except RecordDuplicate as e:
 			return Error(errors.DB_DUPLICATE, e.args)
 
@@ -676,6 +735,76 @@ class Contact(Service):
 
 		# Return the changes or False
 		return Response(bRes and dChanges or False)
+
+	def contacts_create(self, req: jobject) -> Response:
+		"""Contacts (create)
+
+		Creates multiple new contacts in an existing project in the system
+
+		Arguments:
+			req (jobject): Contains data and session if available
+
+		Returns:
+			Services.Response
+		"""
+
+		# Check minimum
+		try: evaluate(req.data, [ '_project', 'records' ])
+		except ValueError as e:
+			return Error(
+				errors.DATA_FIELDS, [ [ k, 'missing' ] for k in e.args ])
+
+		# If the record is not a dict
+		if not isinstance(req.data.records, list):
+			return Error(errors.DATA_FIELDS, [ [ 'records', 'invalid' ] ])
+
+		# Go through each record to check if we got dicts
+		lErrors = []
+		for i in range(len(req.data.records)):
+			if not isinstance(req.data.records[i], dict):
+				lErrors.append([ 'records.%d' % i, 'invalid' ])
+		if lErrors:
+			return Error(errors.DATA_FIELDS, lErrors)
+
+		# If the project doesn't exist
+		if not project.Project.exists(req.data._project):
+			return Error(
+				errors.DB_NO_RECORD,
+				[ req.data._project, 'project' ]
+			)
+
+		# Init the list of returned IDs
+		lIDs = []
+		lErrors = []
+		lDups = []
+
+		# Go through each record
+		for i in range(len(req.data.records)):
+
+			# Create and validate the record
+			try:
+				req.data.records[i]._project = req.data._project
+				req.data.records[i].unsubscribed = False
+				lIDs.append(
+					contact.Contact.add(
+						req.data.records[i],
+						revision_info = { 'user': REPLACE_ME }
+					)
+				)
+			except ValueError as e:
+				lErrors.extend([
+					[ 'records.%d.%s' % (i, l[0]), l[1] ] \
+					for l in e.args[0]
+				])
+			except RecordDuplicate as e:
+				lDups.append(e.args)
+
+		# If we have errors
+		if lErrors:
+			return Error(errors.DATA_FIELDS, lErrors)
+
+		# Return the result
+		return Response(lIDs, warning=lDups)
 
 	def contacts_read(self, req: jobject) -> Response:
 		"""Contacts (read)

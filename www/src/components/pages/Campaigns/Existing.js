@@ -118,6 +118,13 @@ export default function CampaignsExisting(props) {
 				<Typography>No Campaigns found.</Typography>
 			) ||
 				<Results
+					actions={[{
+						dynamic: row => ({
+							url: `/campaigns/${row._id}`
+						}),
+						icon: 'fa-solid fa-magnifying-glass',
+						tooltip: 'View Campaign',
+					}]}
 					data={results}
 					onDelete={resultRemove}
 					orderBy="name"
