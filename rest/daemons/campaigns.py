@@ -101,13 +101,10 @@ if __name__ == '__main__':
 
 		# If there's none, wait for 30 seconds
 		if not lCampaigns:
-			print('No campaigns found. Sleeping...')
 			sleep(30)
 
 		# Go through each one
 		for dCampaign in lCampaigns:
-
-			print('Working on: %s' % pformat(dCampaign))
 
 			# Get the sender
 			dSender = sender.Sender.get(dCampaign['_sender'], raw = True)
@@ -141,12 +138,8 @@ if __name__ == '__main__':
 				)
 			}
 
-			print('=' * 40)
-			print('To: %s' % dContact['email_address'])
-
 			# Generate the subject using the contacts details
 			sSubject = strtr(dCampaign['subject'], dTpl)
-			print('Subject: %s' % sSubject)
 
 			# Generate the email using the contact details
 			sContent = strtr(dCampaign['content'], dTpl)
@@ -155,8 +148,6 @@ if __name__ == '__main__':
 			sContent = '<img src="%s%s" />' % (
 				sTrackRoot, dContact['campaign_contact_id']
 			) + sContent
-			print('Content: %s' % sContent)
-			print('=' * 40)
 
 			# Generate the email
 			message = MIMEMultipart()
