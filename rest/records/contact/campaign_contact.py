@@ -290,7 +290,7 @@ def opened(_id: str, contact_id: str = undefined) -> bool:
 	# Run the SQL and return the result
 	return execute(sSQL, host = dStruct.host) and True or False
 
-def sent_and_delivered(_id: str) -> bool:
+def sent(_id: str) -> bool:
 	"""Sent
 
 	Marks the campaign contact as being sent the message, it most likely was \
