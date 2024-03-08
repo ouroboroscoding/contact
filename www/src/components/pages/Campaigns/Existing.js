@@ -9,6 +9,7 @@
 
 // Ouroboros modules
 import body from '@ouroboros/body';
+import { safeLocaleStorage } from '@ouroboros/browser';
 import { Tree } from '@ouroboros/define';
 import { Options, Results } from '@ouroboros/define-mui';
 
@@ -52,7 +53,7 @@ const CampaignTree = new Tree(CampaignDef, {
 export default function CampaignsExisting(props) {
 
 	// State
-	const [ project, projectSet ] = useState('');
+	const [ project, projectSet ] = useState(safeLocalStorage.string('project', ''));
 	const [ projects, projectsSet ] = useState([]);
 	const [ results, resultsSet ] = useState(false);
 
@@ -103,7 +104,10 @@ export default function CampaignsExisting(props) {
 				<Select
 					native
 					size="small"
-					onChange={ev => projectSet(ev.target.value)}
+					onChange={ev => {
+						projectSet(ev.target.value);
+						localStorage.setItem('project', ev.target.value);
+					}}
 					value={project}
 				>
 					<option value="">Select Project...</option>

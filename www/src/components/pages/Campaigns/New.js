@@ -9,6 +9,7 @@
 
 // Ouroboros modules
 import body, { errors } from '@ouroboros/body';
+import { safeLocaleStorage } from '@ouroboros/browser';
 import { Tree } from '@ouroboros/define';
 import { DefineNode } from '@ouroboros/define-mui';
 import RadioButtons from '@ouroboros/react-radiobuttons-mui'
@@ -62,7 +63,7 @@ export default function CampaignNew(props) {
 	const [ errs, errsSet ] = useState({});
 	const [ minMax, minMaxSet ] = useState([ 300, 600 ]);
 	const [ name, nameSet ] = useState('');
-	const [ project, projectSet ] = useState('-1');
+	const [ project, projectSet ] = useState(safeLocalStorage.string('project', '-1'));
 	const [ projects, projectsSet ] = useState([]);
 	const [ sender, senderSet ] = useState('-1');
 	const [ senders, sendersSet ] = useState([]);
@@ -211,7 +212,10 @@ export default function CampaignNew(props) {
 							label="Project"
 							labelId="campaignNewProject"
 							native
-							onChange={ev => projectSet(ev.target.value)}
+							onChange={ev => {
+								projectSet(ev.target.value);
+								localStorage.setItem('project', ev.target.value);
+							}}
 							value={project}
 						>
 							<option value="-1">Select Project...</option>
