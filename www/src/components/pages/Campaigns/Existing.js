@@ -9,7 +9,7 @@
 
 // Ouroboros modules
 import body from '@ouroboros/body';
-import { safeLocaleStorage } from '@ouroboros/browser';
+import { safeLocalStorage } from '@ouroboros/browser';
 import { Tree } from '@ouroboros/define';
 import { Options, Results } from '@ouroboros/define-mui';
 

@@ -9,7 +9,7 @@
 
 // Ouroboros modules
 import body, { errors } from '@ouroboros/body';
-import { safeLocaleStorage } from '@ouroboros/browser';
+import { safeLocalStorage } from '@ouroboros/browser';
 import { Tree } from '@ouroboros/define';
 import { DefineNode } from '@ouroboros/define-mui';
 import RadioButtons from '@ouroboros/react-radiobuttons-mui'
